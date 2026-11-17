@@ -1,0 +1,13 @@
+{
+  "name": "youtube-skills",
+  "owner": {
+    "name": "Peter Israel"
+  },
+  "plugins": [
+    {
+      "name": "egm",
+      "source": "./elephant-goldfish-model",
+      "description": "Elephant-Goldfish Model by Google (Apache-2.0): develop ideas with context and review plans with fresh-eyed agents."
+    }
+  ]
+}
