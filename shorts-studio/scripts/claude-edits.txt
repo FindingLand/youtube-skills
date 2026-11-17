@@ -1,0 +1,12 @@
+Claude Code edited this entire Short.
+I filmed it on my phone in one take, retakes and all.
+Whisper writes down every word I say, with timestamps.
+Then a script keeps my last try at each line.
+It cuts every pause longer than a quarter second, and speeds me up ten percent.
+Every scene you see is React code, built in Remotion and timed to my words.
+Even these captions light up as I say them.
+Before I see anything, a separate AI agent reviews one frame per second.
+It levels the sound, and the video lands on my desktop.
+My last one took eleven minutes of machine time.
+I just talk. Claude handles the rest.
+And the whole pipeline is free. Link's in the description.

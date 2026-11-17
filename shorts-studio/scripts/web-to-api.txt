@@ -1,0 +1,9 @@
+This free tool pulls data from almost any website.
+It's called Reverse API Engineer, and it works inside Claude Code.
+You give it a site and say what you want. Say, every price on a competitor's page.
+A browser opens the site and records every request the page makes in the background.
+Then the AI reads that traffic and writes a small program that asks the site for that data directly.
+Run it whenever you want. Competitor prices, new listings, job posts, ready to drop into a sheet.
+No copy and paste, and no monthly scraping bill.
+Two catches. The AI model bills you for each build, eleven cents on their demo. And sites with heavy bot protection can still block it.
+But the tool itself is open source and free. Link's in the description.

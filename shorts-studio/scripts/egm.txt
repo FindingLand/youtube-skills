@@ -1,0 +1,9 @@
+Google just made their fix for sloppy AI code free.
+They built it for their own engineers, and now anyone can install it.
+It's called the Elephant Goldfish Model, and it runs two kinds of agents.
+You give it a task. The elephant remembers everything about your project, and it writes the plan.
+Then the goldfish agents read that plan with zero memory of your chat, and they try to break it. Every gap, every blind spot.
+You can't see your own mistakes. Someone who wasn't in the room sees them in seconds.
+And Claude only starts coding after you approve the plan.
+So the bugs get caught on paper, where they cost nothing, not in your code, where they cost hours and tokens.
+And it's free. Link's in the description.

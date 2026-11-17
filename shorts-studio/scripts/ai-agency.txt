@@ -1,0 +1,11 @@
+283 free AI specialists, all inside Claude Code.
+It's called Agency Agents, and it has almost 169 thousand stars on GitHub.
+Each agent has one job.
+Engineers, designers, marketers, sales reps, even a bookkeeper.
+You install them once, and you can ask Claude for any of them by name.
+Here are the three a small business would actually use.
+The Outbound Strategist picks who to target and plans your cold email sequence.
+The Proposal Strategist turns a sales call into a written proposal.
+And the Customer Service agent handles questions and complaints, and knows when to pass it to a human.
+That's prospecting, closing, and support, without three new hires.
+And it's free. Link's in the description.

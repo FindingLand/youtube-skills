@@ -7,6 +7,10 @@ I'm Peter Israel, I build AI automations for businesses. Channel: [@PeterIsraelA
 | Video | Folder | What it does |
 |---|---|---|
 | Google's free fix for sloppy AI code | [elephant-goldfish-model](elephant-goldfish-model) | An "elephant" agent that knows your project writes the plan, then "goldfish" agents with zero memory of your chat try to break it before any code is written |
+| Claude Code edited this entire Short | [shorts-studio](shorts-studio) | My pipeline: phone take with retakes in, finished Short out. Picks the last take of each line, cuts pauses, builds every scene and caption in Remotion, checks frames, levels the audio |
+| 5 Claude plugins every automation builder needs | [five-claude-plugins](five-claude-plugins) | n8n Skills, Playwright, Context7, Superpowers, Skill Creator, with install commands |
+| Pull data from almost any website | [website-into-api](website-into-api) | Reverse API Engineer: records a site's background requests and writes a small API client for it |
+| 283 free AI specialists inside Claude Code | [ai-agency-in-claude-code](ai-agency-in-claude-code) | Agency Agents: install once, call any specialist by name |
 
 ## Install in Claude Code
 

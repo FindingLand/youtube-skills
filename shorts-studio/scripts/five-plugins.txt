@@ -1,0 +1,9 @@
+Five Claude plugins every automation builder needs.
+Each one fixes a different headache.
+First, n8n Skills. It teaches Claude how to build n8n workflows the right way, node by node.
+Second, Playwright, from Microsoft. Claude opens a real browser, clicks, fills in forms, and pulls data from sites with no API.
+Third, Context7. Claude reads the current docs for your tools, so it stops writing code for old versions.
+Fourth, Superpowers, with over three hundred thousand stars. Claude brainstorms, writes a plan, and tests its own work before it says done.
+Fifth, Skill Creator, from Anthropic. You describe a process once, and it writes a skill Claude can follow every time.
+Building, browsing, docs, planning, and memory. That's most of an automation job.
+All five are on GitHub and free to install. Links are in the description.
