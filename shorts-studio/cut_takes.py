@@ -44,6 +44,10 @@ for li, line in enumerate(lines):
         if difflib.get_close_matches(norm(W[j]["w"]), line, n=1, cutoff=0.7): end = j
     chosen.append((pick, end)); lo = stop
     print(f"line {li+1}: {len([i for i in cand if i < stop])} attempt(s), using the last: \"{' '.join(w['w'] for w in W[pick:end+1])}\"")
+    # Nov 17 2026: the EGM take started recording late and "Google" (the hook's first word) was never captured. Say so loudly.
+    if norm(W[pick]["w"]) != line[0] and not difflib.get_close_matches(norm(W[pick]["w"]), [line[0]], cutoff=0.8):
+        print(f"  WARNING line {li+1}: the take starts on \"{W[pick]['w']}\", the script starts on \"{line[0]}\". "
+              f"{'Recording started late? ' if li == 0 and W[pick]['s'] < 0.3 else ''}Check this line before trusting the cut.")
 
 # segments: chosen takes, split on pauses > 0.25 s
 segs, line_starts, t_cut = [], [], 0.0
