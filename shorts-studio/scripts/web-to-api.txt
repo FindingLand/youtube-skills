@@ -5,5 +5,5 @@ A browser opens the site and records every request the page makes in the backgro
 Then the AI reads that traffic and writes a small program that asks the site for that data directly.
 Run it whenever you want. Competitor prices, new listings, job posts, ready to drop into a sheet.
 No copy and paste, and no monthly scraping bill.
-Two catches. The AI model bills you for each build, eleven cents on their demo. And sites with heavy bot protection can still block it.
+And sites with heavy bot protection can still block it.
 But the tool itself is open source and free. Link's in the description.

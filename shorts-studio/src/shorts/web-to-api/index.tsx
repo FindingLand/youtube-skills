@@ -1,64 +1,85 @@
-// Web-to-API Short (Nov 17 2026): "Claude Code reads almost any website". Scenes anchored to scripts/web-to-api.txt.
-// Repo facts verified Nov 17 2026 (plan.md + GitHub API): kalil0321/reverse-api-engineer, 3,815 stars, MIT, Python.
+// Web-to-API Short v3 (Nov 18 2026): "This free tool pulls data from almost any website". Scenes anchored to scripts/web-to-api.txt.
+// v3 follows Peter's style rules (shorts-guide 3-ter) and the frame study of Nick's Short fDpuRX6yr08: REAL images (reverseapi.dev
+// hero art, the GitHub page) panned and highlighted on the spoken words; FULL shots (no face) for the name + the hard part
+// (browser -> traffic -> code); on-screen text only repeats what is said; no music.
+// Repo facts verified Nov 18 2026 (screenshot): kalil0321/reverse-api-engineer, 3.9k stars, MIT, "Works with Claude Code, Codex, ...".
 // shop.example.com (reserved example domain) and every product / price below are ILLUSTRATIVE mocks of a fictional shop, not a real run.
 import React from "react";
-import {interpolate} from "remotion";
-import {Card, Mono, Pill, Sweep, Icon, Logo, Cursor, typed, pop, makeShort, SANS, SERIF, MONO, BLUE, INK, OK, BAD, GOLDFISH, ELEPHANT, TOP, H, HOOK_TOP, HOOK_H, REPO, W} from "../../kit";
+import {interpolate, Img, staticFile, Easing} from "remotion";
+import {Card, Mono, Pill, Sweep, Icon, Logo, Cursor, typed, pop, makeShort, FullCtx, SANS, SERIF, MONO, BLUE, INK, OK, BAD, GOLDFISH, ELEPHANT, TOP, H, HOOK_TOP, HOOK_H, REPO, W} from "../../kit";
 import words from "./words.json";
 
 const SHOP = "shop.example.com";
 const PRODUCTS: [string, string][] = [["Desk Lamp", "$24.00"], ["Office Chair", "$31.00"], ["Notebook Set", "$19.00"], ["Water Bottle", "$12.50"]];
 
-// 1. "This free tool": the real repo page
-const S1Repo: React.FC<{d: number}> = ({d}) => (
-  <Card top={HOOK_TOP} h={HOOK_H} d={d} fill={1.12} url="github.com/kalil0321/reverse-api-engineer">
-    <div style={{fontFamily: SANS}}>
-      <div style={{display: "flex", alignItems: "center", gap: 16}}>
-        <Logo src="github-icon.svg" size={50} />
-        <div style={{fontSize: 40, color: "#1F2328"}}><span style={{color: "#0969DA"}}>kalil0321</span> / <b style={{color: "#0969DA"}}>reverse-api-engineer</b></div>
-      </div>
-      <div style={{marginTop: 26, fontSize: 32, color: "#3B434C", lineHeight: 1.35}}><Sweep d={d} from={8} to={30}>Reverse engineer any website into a typed API client.</Sweep></div>
-      <div style={{marginTop: 30, display: "flex", gap: 14, fontSize: 34, fontWeight: 600, color: "#1F2328"}}>
-        {["★ 3.8k", "MIT", "Python"].map((x, i) => (
-          <span key={x} style={{padding: "6px 16px", border: "2px solid #D1D9E0", borderRadius: 10, opacity: pop(d, 30 + i * 8)}}>{x}</span>
-        ))}
-      </div>
+// A real screenshot seen through the card: keyframed crop (pan/zoom) + highlights that land on the spoken words.
+// Coordinates are image pixels (2x screenshots, 1800x2200). Box = the card's content area; inside a FULL shot the kit zooms
+// content 1.3x, so the box is measured before that zoom.
+type Key = {at: number; cx: number; cy: number; w: number};
+type Mark = {x: number; y: number; w: number; h: number; from: number; to: number; box?: boolean};
+const Shot: React.FC<{d: number; src: string; iw: number; ih: number; keys: Key[]; marks?: Mark[]; boxH?: number}> = ({d, src, iw, ih, keys, marks = [], boxH}) => {
+  const full = React.useContext(FullCtx);
+  const BW = full ? 952 / 1.3 : 892, BH = boxH ?? (full ? 976 / 1.3 : 616);
+  const ats = keys.map((k) => k.at);
+  const ip = (f: (k: Key) => number) => keys.length === 1 ? f(keys[0]) :
+    interpolate(d, ats, keys.map(f), {extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic)});
+  const cx = ip((k) => k.cx), cy = ip((k) => k.cy), w = ip((k) => k.w);
+  const sc = BW / w, h = w * BH / BW;
+  const X = (x: number) => (x - (cx - w / 2)) * sc, Y = (y: number) => (y - (cy - h / 2)) * sc;
+  return (
+    <div style={{position: "relative", width: BW, height: BH, overflow: "hidden", borderRadius: 14, background: "#fff"}}>
+      <Img src={staticFile(src)} style={{position: "absolute", left: X(0), top: Y(0), width: iw * sc, height: ih * sc, maxWidth: "none"}} />
+      {marks.map((m, i) => {
+        const p = interpolate(d, [m.from, m.to], [0, 1], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
+        return m.box
+          ? <div key={i} style={{position: "absolute", left: X(m.x), top: Y(m.y), width: m.w * sc, height: m.h * sc, border: `6px solid ${BLUE}`, borderRadius: 14,
+              opacity: p, transform: `scale(${1.08 - 0.08 * p})`, boxShadow: "0 0 24px rgba(0,133,255,.45)"}} />
+          : <div key={i} style={{position: "absolute", left: X(m.x), top: Y(m.y), width: m.w * sc * p, height: m.h * sc, background: "rgba(0,133,255,.28)", borderRadius: 6}} />;
+      })}
     </div>
+  );
+};
+
+// 1. "This free tool pulls data from almost any website": the tool's real hero art; "Turn websites" boxed on "any website"
+const S1Hero: React.FC<{d: number}> = ({d}) => (
+  <Card top={HOOK_TOP} h={HOOK_H} d={d} url="reverseapi.dev">
+    <Shot d={d} src="web-to-api/reverseapi.dev_hero.png" iw={1800} ih={2200} boxH={316}
+      keys={[{at: 0, cx: 900, cy: 905, w: 1700}, {at: 75, cx: 890, cy: 900, w: 1560}]}
+      marks={[{x: 278, y: 572, w: 505, h: 215, from: 68, to: 80, box: true}]} />
   </Card>
 );
 
-// 2. "It's called Reverse": name + Claude Code
-const S2Name: React.FC<{d: number}> = ({d}) => {
-  const k = pop(d, 30);
+// 2. FULL. "It's called Reverse API Engineer, and it works inside Claude Code": the real GitHub page, the name highlighted as it
+// is said, then a pan to the About box where "Claude Code" lights up on the word
+const S2Repo: React.FC<{d: number}> = ({d}) => (
+  <Card top={TOP} h={H} d={d} url="github.com/kalil0321/reverse-api-engineer">
+    <Shot d={d} src="web-to-api/kalil0321_reverse-api-engineer_top.png" iw={1800} ih={2200}
+      keys={[{at: 0, cx: 375, cy: 400, w: 720}, {at: 88, cx: 375, cy: 400, w: 720}, {at: 106, cx: 1390, cy: 640, w: 700}]}
+      marks={[{x: 92, y: 338, w: 390, h: 70, from: 14, to: 52}, {x: 1381, y: 638, w: 166, h: 56, from: 112, to: 132}]} />
+  </Card>
+);
+
+// 3. "You give it a site and say what you want"
+const S3Site: React.FC<{d: number}> = ({d}) => {
+  const k = pop(d, 36);
   return (
-    <Card top={HOOK_TOP} h={HOOK_H} d={d} title="Reverse API Engineer">
-      <div style={{fontFamily: SANS, color: INK, textAlign: "center"}}>
-        <div style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 92, color: BLUE, lineHeight: 1.05, letterSpacing: -1}}>Reverse API Engineer</div>
-        <div style={{marginTop: 34, display: "flex", alignItems: "center", justifyContent: "center", gap: 24, opacity: k, transform: `scale(${0.85 + 0.15 * k})`}}>
-          <div style={{fontSize: 50, fontWeight: 800, letterSpacing: -1}}>works inside</div>
-          <div style={{width: 96, height: 96, borderRadius: 24, background: "#fff", boxShadow: "0 8px 26px rgba(0,0,0,.14)", display: "flex", alignItems: "center", justifyContent: "center"}}><Logo src="claude-icon.svg" size={66} /></div>
-          <div style={{fontSize: 50, fontWeight: 800, letterSpacing: -1}}>Claude Code</div>
+    <Card top={TOP} h={H} d={d} title="Reverse API Engineer">
+      <div style={{fontFamily: SANS, color: INK, paddingTop: 120}}>
+        <div style={{display: "flex", alignItems: "center", gap: 22, border: "3px solid #D1D9E0", borderRadius: 22, padding: "30px 26px"}}>
+          <Icon src="globe_flat.svg" color={ELEPHANT} size={74} />
+          <div style={{fontFamily: MONO, fontSize: 52}}>{typed(SHOP, d, 4, 26)}{d < 30 && <Cursor d={d} />}</div>
+          <div style={{marginLeft: "auto", fontSize: 24, fontWeight: 800, letterSpacing: 2, color: "#fff", background: "#6B7480", borderRadius: 8, padding: "4px 12px"}}>EXAMPLE</div>
+        </div>
+        <div style={{marginTop: 90, display: "flex", alignItems: "center", gap: 24, opacity: k, transform: `scale(${0.88 + 0.12 * k})`, transformOrigin: "left center"}}>
+          <Logo src="claude-icon.svg" size={84} />
+          <div style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 84, color: BLUE}}>What do you want?</div>
         </div>
       </div>
     </Card>
   );
 };
 
-// 3. "You give it": terminal, the ask, the browser starting
-const S3Ask: React.FC<{d: number}> = ({d}) => {
-  const ask = "> get every price from\n  " + SHOP;
-  const steps = ["● Launching browser", "● Visiting " + SHOP, "● Recording traffic"];
-  return (
-    <Card dark top={TOP} h={H} d={d} fill={1.45} title="Terminal · ~/projects">
-      <Mono c="#fff" size={44}>{"$ " + typed("reverse-api-engineer", d, 0, 70)}{d < 9 && <Cursor d={d} />}</Mono>
-      {d > 8 && <div style={{display: "flex", alignItems: "center", gap: 14}}><Logo src="claude-icon.svg" size={40} /><Mono c="#8A8A8A" size={32}>Reverse API Engineer · ready</Mono></div>}
-      {d > 10 && <Mono c="#7AB8FF" size={44}>{typed(ask, d, 8, 100)}{d < 8 + 22 && <Cursor d={d} />}</Mono>}
-      {steps.map((x, i) => d > 24 + i * 8 && <Mono key={x} c="#5BD68A" size={36}>{x}</Mono>)}
-    </Card>
-  );
-};
-
-// 4. "Say, every price": the fictional shop page, every price highlighted
+// 4. "Say, every price on a competitor's page": the fictional shop page, every price highlighted
 const S4Shop: React.FC<{d: number}> = ({d}) => (
   <Card top={TOP} h={H} d={d} url={SHOP + "/shop"}>
     <div style={{fontFamily: SANS, color: INK}}>
@@ -76,7 +97,7 @@ const S4Shop: React.FC<{d: number}> = ({d}) => (
                 <Icon src="label_flat.svg" color={[ELEPHANT, GOLDFISH, OK, "#8B5CF6"][i]} size={60} />
               </div>
               <div style={{marginTop: 10, fontSize: 34, fontWeight: 700}}>{n}</div>
-              <div style={{marginTop: 2, fontSize: 46, fontWeight: 800}}><Sweep d={d} from={26 + i * 4} to={34 + i * 4}>{p}</Sweep></div>
+              <div style={{marginTop: 2, fontSize: 46, fontWeight: 800}}><Sweep d={d} from={8 + i * 4} to={16 + i * 4}>{p}</Sweep></div>
             </div>
           );
         })}
@@ -85,28 +106,26 @@ const S4Shop: React.FC<{d: number}> = ({d}) => (
   </Card>
 );
 
-// 5. "A browser opens": live list of the requests the page makes
+// 5. FULL. "A browser opens the site and records every request": the live request list
 const REQS: [string, string, string][] = [
   ["GET", "/shop", "200"], ["GET", "/static/app.js", "200"], ["GET", "/api/products?page=1", "200"], ["GET", "/api/products?page=2", "200"],
-  ["GET", "/api/prices?ids=1,2,3", "200"], ["POST", "/api/cart/view", "204"], ["GET", "/api/products?page=3", "200"], ["GET", "/api/stock?ids=1,2,3", "200"],
+  ["GET", "/api/prices?ids=1,2,3", "200"], ["POST", "/api/cart/view", "204"], ["GET", "/api/products?page=3", "200"],
 ];
 const S5Traffic: React.FC<{d: number}> = ({d}) => {
-  const n = Math.min(REQS.length, Math.max(0, Math.floor(d / 4) + 1));
+  const n = Math.min(REQS.length, Math.max(0, Math.floor((d - 24) / 8) + 1));
+  const full = React.useContext(FullCtx);
   return (
-    <Card dark top={TOP} h={H} d={d} title={"Browser · " + SHOP + " · recording"}>
+    <Card dark top={TOP} h={H} d={d} title={"Browser · " + SHOP}>
       <div style={{display: "flex", alignItems: "center", gap: 16}}>
         <Icon src="globe_flat.svg" color="#7AB8FF" size={54} />
-        <Mono c="#fff" size={44}>Network</Mono>
-        <div style={{marginLeft: "auto", display: "flex", alignItems: "center", gap: 10}}>
-          <div style={{width: 22, height: 22, borderRadius: 11, background: BAD, opacity: Math.floor(d / 12) % 2 ? 0.35 : 1}} />
-          <Mono c="#FF8A80" size={36}>{`REC · ${n}`}</Mono>
-        </div>
+        <Mono c="#fff" size={46}>{d < 60 ? typed("Opening " + SHOP, d, 0, 40) : "Every request"}</Mono>
+        {d >= 24 && <div style={{marginLeft: "auto", width: 22, height: 22, borderRadius: 11, background: BAD, opacity: Math.floor(d / 12) % 2 ? 0.35 : 1}} />}
       </div>
-      <div style={{marginTop: 10}}>
+      <div style={{marginTop: 14}}>
         {REQS.slice(0, n).map(([m, p, c], i) => {
           const api = p.startsWith("/api/products");
           return (
-            <div key={i} style={{display: "flex", gap: 18, fontFamily: MONO, fontSize: 40, lineHeight: 1.45, padding: "0 10px", borderRadius: 8, background: api ? "rgba(0,133,255,.25)" : "transparent", opacity: pop(d, i * 4)}}>
+            <div key={i} style={{display: "flex", gap: 18, fontFamily: MONO, fontSize: 38, lineHeight: full ? 2.3 : 1.5, padding: "0 10px", borderRadius: 8, background: api ? "rgba(0,133,255,.25)" : "transparent", opacity: pop(d, 24 + i * 8)}}>
               <span style={{color: m === "GET" ? "#5BD68A" : "#FFD479", width: 100}}>{m}</span>
               <span style={{color: api ? "#fff" : "#B8B8B8", flex: 1}}>{p}</span>
               <span style={{color: "#8A8A8A"}}>{c}</span>
@@ -114,47 +133,49 @@ const S5Traffic: React.FC<{d: number}> = ({d}) => {
           );
         })}
       </div>
-      {d > 44 && <div style={{marginTop: 8}}><Mono c="#5BD68A" size={36}>✓ Saved 8 requests · traffic.har</Mono></div>}
     </Card>
   );
 };
 
-// 6. "Then the AI": the generated client, typing
+// 6. FULL. "Then the AI reads that traffic and writes a small program that asks the site for data directly"
 const S6Code: React.FC<{d: number}> = ({d}) => {
   const code = `class StoreClient:
-  def get_products(self, page=1):
-    r = self.get("/api/products",
-                 page=page)
-    return r["items"]`;
-  const CPS = 200;
-  const t = typed(code, d, 2, CPS);
+  def get_products(self):
+    return self.get(
+      "/api/products")`;
+  const t = typed(code, d, 50, 40);
   const done = t.length === code.length;
-  const doneAt = 2 + Math.ceil((code.length / CPS) * 30);
   return (
-    <Card dark top={TOP} h={H} d={d} fill={1.1} title="Write(example_store/api_client.py)">
-      <div style={{display: "flex", alignItems: "center", gap: 14, marginBottom: 8}}><Logo src="python.svg" size={44} /><Mono c="#8A8A8A" size={32}>AI read 8 requests · writing client</Mono></div>
-      <Mono size={40}>{t}{!done && <Cursor d={d} />}</Mono>
-      {done && <div style={{marginTop: 14, padding: "8px 18px", borderRadius: 12, border: "2px solid #3A3A3A", background: "#232323"}}>
-        <Mono c="#5BD68A" size={40}>{">>> " + typed("client.get_products()", d, doneAt + 4, 24)}</Mono>
-      </div>}
-      <div style={{display: "flex", gap: 14}}><Pill ok text="asks the site directly" d={d} at={doneAt + 30} /></div>
+    <Card dark top={TOP} h={H} d={d} fill={1.0} title="Write(store_client.py)">
+      <div style={{display: "flex", flexDirection: "column", justifyContent: "center", height: 700, gap: 34}}>
+      <div style={{display: "flex", alignItems: "center", gap: 14, opacity: pop(d, 0)}}>
+        <Logo src="claude-icon.svg" size={64} /><Mono c="#B8B8B8" size={44}>{typed("reads the traffic…", d, 4, 24)}</Mono>
+      </div>
+      <Mono size={48}>{t}{!done && d > 50 && <Cursor d={d} />}</Mono>
+      <div style={{display: "flex", gap: 14, zoom: 1.4}}><Pill ok text="asks the site directly" d={d} at={160} /></div>
+      </div>
     </Card>
   );
 };
 
-// 7. "Run it whenever": run the program, JSON comes back
-const S7Run: React.FC<{d: number}> = ({d}) => (
-  <Card dark top={TOP} h={H} d={d} fill={1.25} title="Terminal · ~/projects">
-    <Mono c="#fff" size={36}>{"$ " + typed("python example_usage.py", d, 0, 70)}{d < 10 && <Cursor d={d} />}</Mono>
-    {PRODUCTS.map(([n, p], i) => d > 4 + i * 3 && (
-      <Mono key={n} c="#FFD479" size={30}>{`${i === 0 ? "[" : " "}{"name": "${n}", "price": ${p.slice(1)}}${i === PRODUCTS.length - 1 ? "]" : ","}`}</Mono>
-    ))}
-    {d > 16 && <div style={{marginTop: 20}}><Mono c="#5BD68A" size={64}>✓ 4 prices pulled</Mono></div>}
-    <div><Pill ok text="No browser, no clicking" d={d} at={20} /></div>
-  </Card>
-);
+// 7. "Run it whenever you want": a clock face sweeping round
+const S7Run: React.FC<{d: number}> = ({d}) => {
+  const k = pop(d, 0), a = d * 9;
+  return (
+    <Card top={TOP} h={H} d={d} title="Run it">
+      <div style={{fontFamily: SANS, color: INK, textAlign: "center", paddingTop: 30}}>
+        <div style={{position: "relative", width: 300, height: 300, margin: "0 auto", borderRadius: 150, border: `14px solid ${BLUE}`, opacity: k, transform: `scale(${0.85 + 0.15 * k})`}}>
+          <div style={{position: "absolute", left: 136, top: 50, width: 14, height: 100, background: INK, borderRadius: 7, transformOrigin: "7px 100px", transform: `rotate(${a}deg)`}} />
+          <div style={{position: "absolute", left: 136, top: 80, width: 14, height: 70, background: GOLDFISH, borderRadius: 7, transformOrigin: "7px 70px", transform: `rotate(${a / 12}deg)`}} />
+          <div style={{position: "absolute", left: 128, top: 128, width: 30, height: 30, borderRadius: 15, background: INK}} />
+        </div>
+        <div style={{marginTop: 40, fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 92, color: BLUE, opacity: pop(d, 8)}}>Whenever you want</div>
+      </div>
+    </Card>
+  );
+};
 
-// 8. "Competitor prices, new": three uses
+// 8. "Competitor prices, new listings, job posts": three uses, each on its word
 const S8Uses: React.FC<{d: number}> = ({d}) => {
   const box = (bg: string, line: string, c: string, icon: string, t: string, k: number) => (
     <div style={{borderRadius: 22, background: bg, border: `2px solid ${line}`, padding: "28px 30px", display: "flex", alignItems: "center", gap: 28, opacity: k, transform: `scale(${0.9 + 0.1 * k})`, filter: `blur(${(1 - k) * 8}px)`}}>
@@ -166,40 +187,39 @@ const S8Uses: React.FC<{d: number}> = ({d}) => {
     <Card top={TOP} h={H} d={d} title="What you can pull">
       <div style={{display: "flex", flexDirection: "column", gap: 28}}>
         {box("#E7F1FF", "#C7DDFB", ELEPHANT, "label_flat.svg", "Competitor prices", pop(d, 0))}
-        {box("#FFF1E4", "#FBD9B8", GOLDFISH, "house_flat.svg", "New listings", pop(d, 6))}
-        {box("#EAF7EE", "#BFE5C9", OK, "briefcase_flat.svg", "Job posts", pop(d, 12))}
+        {box("#FFF1E4", "#FBD9B8", GOLDFISH, "house_flat.svg", "New listings", pop(d, 50))}
+        {box("#EAF7EE", "#BFE5C9", OK, "briefcase_flat.svg", "Job posts", pop(d, 84))}
       </div>
     </Card>
   );
 };
 
-// 9. "Ready to drop": rows land in a sheet
+// 9. "Ready to drop into a sheet": rows land in a sheet
 const S9Sheet: React.FC<{d: number}> = ({d}) => {
-  const cell = (x: string, w: number, head?: boolean, bg?: string) => (
-    <div style={{width: w, padding: "14px 18px", borderRight: "1px solid #D9DEE3", fontWeight: head ? 700 : 500, background: head ? "#E8F0FE" : bg, boxSizing: "border-box"}}>{x}</div>
+  const cell = (x: string, w: number, head?: boolean) => (
+    <div style={{width: w, padding: "24px 18px", borderRight: "1px solid #D9DEE3", fontWeight: head ? 700 : 500, background: head ? "#E8F0FE" : undefined, boxSizing: "border-box"}}>{x}</div>
   );
   return (
     <Card top={TOP} h={H} d={d} fill={1.25} title="prices · Sheet">
       <div style={{fontFamily: SANS, fontSize: 36, color: INK, border: "1px solid #D9DEE3", borderRadius: 12, overflow: "hidden", width: 704}}>
         <div style={{display: "flex", borderBottom: "1px solid #D9DEE3"}}>{cell("Product", 314, true)}{cell("Price", 180, true)}{cell("Checked", 210, true)}</div>
         {PRODUCTS.map(([n, p], i) => {
-          const k = pop(d, i * 3);
+          const k = pop(d, 10 + i * 4);
           return (
             <div key={n} style={{display: "flex", borderBottom: "1px solid #D9DEE3", opacity: k, transform: `translateX(${(1 - k) * 40}px)`}}>
-              {cell(n, 314)}{cell(p, 180, false, d > 34 && i === 1 ? "#FFF8C5" : undefined)}{cell("today", 210)}
+              {cell(n, 314)}{cell(p, 180)}{cell("today", 210)}
             </div>
           );
         })}
       </div>
-      <div style={{marginTop: 6}}><Pill ok text="Ready to use" d={d} at={8} /></div>
     </Card>
   );
 };
 
-// 10. "No copy and": no manual work, no monthly bill
+// 10. "No copy and paste, and no monthly scraping bill"
 const S10Zero: React.FC<{d: number}> = ({d}) => {
-  const strike = interpolate(d, [4, 16], [0, 100], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
-  const k = pop(d, 14), k2 = pop(d, 34);
+  const strike = interpolate(d, [2, 14], [0, 100], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
+  const k = pop(d, 34);
   return (
     <Card top={TOP} h={H} d={d} fill={1.3} title="Your cost">
       <div style={{fontFamily: SANS, color: INK, textAlign: "center"}}>
@@ -211,80 +231,48 @@ const S10Zero: React.FC<{d: number}> = ({d}) => {
           <Logo src="money_flat.svg" size={130} />
           <div style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 180, color: BLUE, lineHeight: 1}}>$0</div>
         </div>
-        <div style={{marginTop: 24, fontSize: 54, fontWeight: 800, letterSpacing: -1, opacity: k2}}>monthly scraping bill</div>
-        <Pill ok text="No scraping subscription" d={d} at={50} />
+        <div style={{marginTop: 24, fontSize: 54, fontWeight: 800, letterSpacing: -1, opacity: k}}>monthly scraping bill</div>
       </div>
     </Card>
   );
 };
 
-// 11-12. "Two catches": the AI model bills each build; bot protection can block
-const Catches: React.FC<{d: number; second?: boolean}> = ({d, second}) => {
-  const cents = interpolate(d, [10, 40], [0, 11], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
-  const k = pop(d, 2);
-  if (!second) return (
-    <Card top={TOP} h={H} d={d} fill={1.3} title="Two catches">
-      <div style={{fontFamily: SANS, color: INK}}>
-        <div style={{fontSize: 66, fontWeight: 800, letterSpacing: -1.5}}>Two catches</div>
-        <div style={{marginTop: 16, borderRadius: 22, background: "#FFF1E4", border: "2px solid #FBD9B8", padding: "22px 26px", textAlign: "center"}}>
-          <div style={{display: "flex", alignItems: "center", justifyContent: "center", gap: 24}}>
-            <Logo src="coin_flat.svg" size={120} />
-            <div style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 140, color: GOLDFISH, lineHeight: 1}}>{`$${(Math.round(cents) / 100).toFixed(2)}`}</div>
-          </div>
-          <div style={{marginTop: 10, fontSize: 42, fontWeight: 700}}>AI model cost per build</div>
-          <Pill text="billed per build (their demo)" d={d} at={44} />
-        </div>
-      </div>
-    </Card>
-  );
+// 11. "And sites with heavy bot protection can still block it". The AI-cost catch was dropped (Peter, Nov 18 2026: our own AI
+// subscription is never a catch). Shield on "bot protection", the blocked request on "block it".
+const S12Bots: React.FC<{d: number}> = ({d}) => {
+  const k = pop(d, 36), k2 = pop(d, 82);   // "bot protection" ~1.4 s, "block it" ~2.8 s into the line
   return (
-    <Card top={TOP} h={H} d={30} fill={1.0} title="Two catches">
-      <div style={{fontFamily: SANS, color: INK}}>
-        <div style={{fontSize: 66, fontWeight: 800, letterSpacing: -1.5}}>Two catches</div>
-        <div style={{marginTop: 14, borderRadius: 22, background: "#FFF1E4", border: "2px solid #FBD9B8", padding: "18px 26px", display: "flex", alignItems: "center", gap: 26}}>
-          <Logo src="coin_flat.svg" size={96} />
-          <div>
-            <div style={{fontSize: 40, fontWeight: 700}}>AI model cost per build</div>
-            <div style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 80, color: GOLDFISH, lineHeight: 1.05}}>$0.11</div>
-            <Pill text="billed per build" d={99} at={44} />
-          </div>
+    <Card top={TOP} h={H} d={d} fill={1.2} title="Heavy bot protection">
+      <div style={{fontFamily: SANS, color: INK, textAlign: "center", paddingTop: 20}}>
+        <div style={{opacity: k, transform: `scale(${0.8 + 0.2 * k})`}}><Logo src="shield_flat.svg" size={220} /></div>
+        <div style={{marginTop: 22, fontSize: 60, fontWeight: 800, letterSpacing: -1, opacity: k}}>Heavy bot protection</div>
+        <div style={{marginTop: 26, display: "inline-flex", alignItems: "center", gap: 18, padding: "14px 26px", borderRadius: 16, background: "#FDEDEC", border: `3px solid ${BAD}`,
+          opacity: k2, transform: `scale(${0.85 + 0.15 * k2})`}}>
+          <span style={{fontFamily: MONO, fontSize: 44, color: BAD, fontWeight: 700}}>✕ blocked</span>
         </div>
-        {second && (
-          <div style={{marginTop: 18, borderRadius: 22, background: "#FDEDEC", border: "2px solid #F5C2BE", padding: "18px 26px", display: "flex", alignItems: "center", gap: 26, opacity: k, transform: `scale(${0.9 + 0.1 * k})`}}>
-            <Logo src="shield_flat.svg" size={96} />
-            <div>
-              <div style={{fontSize: 40, fontWeight: 700}}>Heavy bot protection</div>
-              <div style={{fontFamily: MONO, fontSize: 34, color: BAD, marginTop: 6}}>{d > 24 ? "GET /api/products  403" : "GET /api/products  …"}</div>
-              <Pill text="can still block it" d={d} at={40} />
-            </div>
-          </div>
-        )}
       </div>
     </Card>
   );
 };
-const S11Cost: React.FC<{d: number}> = ({d}) => <Catches d={d} />;
-const S12Bots: React.FC<{d: number}> = ({d}) => <Catches d={d} second />;
 
-// 13. "But the tool": install line, open source
-const S13Install: React.FC<{d: number}> = ({d}) => (
-  <Card dark top={TOP} h={H} d={d} fill={1.4} title="Terminal · install">
-    <Mono c="#fff" size={46}>{typed("$ uv tool install\n    reverse-api-engineer", d, 0, 100)}{d < 14 && <Cursor d={d} />}</Mono>
-    {d > 15 && <Mono c="#5BD68A" size={40}>✓ Installed</Mono>}
-    <div style={{marginTop: 20, display: "flex", gap: 18}}>
-      {["Open source", "MIT", "Free tool"].map((x, i) => (
-        <div key={x} style={{padding: "12px 18px", borderRadius: 14, border: "3px solid #2E6FD1", background: "#0F2A4D", color: "#fff", fontFamily: SANS, fontWeight: 800, fontSize: 36, opacity: pop(d, 18 + i * 6), transform: `scale(${0.85 + 0.15 * pop(d, 18 + i * 6)})`}}>{x}</div>
-      ))}
-    </div>
-    <div style={{marginTop: 22, display: "flex", alignItems: "center", gap: 14, opacity: pop(d, 34)}}>
-      <div style={{width: 52, height: 52, borderRadius: 12, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center"}}><Logo src="github-icon.svg" size={40} /></div>
-      <Mono c="#B8B8B8" size={32}>kalil0321/reverse-api-engineer</Mono>
-    </div>
-  </Card>
-);
+// 13. "But the tool itself is free and open source": each word lands as it is said
+const S13Free: React.FC<{d: number}> = ({d}) => {
+  const chip = (t: string, at: number) => {
+    const k = pop(d, at);
+    return <div style={{padding: "22px 40px", borderRadius: 22, border: `4px solid ${BLUE}`, background: "#E7F1FF", color: "#0B3D91", fontFamily: SERIF, fontStyle: "italic",
+      fontWeight: 800, fontSize: 96, opacity: k, transform: `scale(${0.8 + 0.2 * k})`}}>{t}</div>;
+  };
+  return (
+    <Card top={TOP} h={H} d={d} url="github.com/kalil0321/reverse-api-engineer">
+      <div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: 46, paddingTop: 60}}>
+        {chip("Free", 36)}
+        {chip("Open source", 54)}
+      </div>
+    </Card>
+  );
+};
 
-// 14. "Link's in the": closing card. Same look as kit EndCard, but "Open source" at 150 px wraps and pushed the
-// repo line out of the card, so this copy sizes the big line to fit on one line.
+// 14. "Link's in the description": closing card (kit EndCard look; "Open source" sized to one line)
 const S14End: React.FC<{d: number}> = ({d}) => {
   const k = pop(d, 3);
   return (
@@ -303,15 +291,17 @@ const S14End: React.FC<{d: number}> = ({d}) => {
 export const webtoapi = makeShort({
   slug: "web-to-api",
   words: words as W[],
-  fix: {cloud: "Claude", claud: "Claude", plotcode: "Claude Code", "plot code": "Claude Code", sides: "sites", butt: "bot", links: "Link's", lifts: "listings", shift: "sheet", shit: "sheet", "scraping build": "scraping bill", builds: "bills", "11": "eleven", "your demo": "their demo"},
-  key: ["free", "website", "request", "directly", "whenever", "sheet", "monthly", "catches", "cents", "block"],
+  fix: {cloud: "Claude", claud: "Claude", plotcode: "Claude Code", "plot code": "Claude Code", sides: "sites", butt: "bot", links: "Link's", lifts: "listings", shift: "sheet", shit: "sheet", "scraping build": "scraping bill"},
+  key: ["free", "website", "request", "directly", "whenever", "sheet", "monthly", "block"],
   noun: ["reverse", "api", "engineer", "claude", "code"],
   anchors: [
-    ["this free tool", S1Repo], ["it's called", S2Name], ["you give it", S3Ask], ["say every price", S4Shop], ["a browser opens", S5Traffic],
+    ["this free tool", S1Hero], ["it's called", S2Repo], ["you give it", S3Site], ["say every price", S4Shop], ["a browser opens", S5Traffic],
     ["then the ai", S6Code], ["run it whenever", S7Run], ["competitor prices new", S8Uses], ["ready to drop", S9Sheet], ["no copy and", S10Zero],
-    ["two catches", S11Cost], ["and sites with", S12Bots], ["but the tool", S13Install], ["link's in the", S14End],
+    ["and sites with", S12Bots], ["but the tool", S13Free], ["link's in the", S14End],
   ],
-  hookEnd: 2,
-  hook: {brand: "Claude Code", rest: "Reads", box: "Almost Any Website", brandColor: "#D97757"},
+  // FULL (no face): the name on the real repo page, and the hard part (browser -> traffic -> program). Peter: hard parts = animation only
+  full: [["it's called", 5.6], ["a browser opens", 12.2]],
+  hookEnd: 1,   // the hook title must be gone before the FULL repo shot (it would sit on the big card)
+  hook: {brand: "Free Tool", rest: "Pulls Data", box: "From Any Website", brandColor: "#0085FF"},
   faceSrcTop: 640,
 });

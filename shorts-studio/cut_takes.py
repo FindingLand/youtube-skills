@@ -3,13 +3,20 @@
     py cut_takes.py raw.mp4 words_raw.json script.txt out.mp4 lines.json
 How: each script line's attempts are found in the transcript by fuzzy-matching the line's first words (small word changes
 are fine). For line i, the chosen take = the LAST attempt that starts before line i+1's first attempt; it runs to the last
-spoken word before that. Pauses over 0.25 s inside the chosen takes are cut (0.12 s pads); then 1.1x speed, 1080x1920.
+spoken word before that. SMOOTH since Nov 18 2026: pauses inside a take stay unless >= 1.5 s (env PAUSE_CUT), real speed (env SPEED), 1080x1920.
 Prints which attempt was used per line, so a wrong pick is visible. Writes lines.json = start time of each line in the cut.
 """
 import json, subprocess, sys, re, difflib, psutil
 from ffpath import FF
 raw, wj, sj, out, lj = sys.argv[1:6]
-SPEED, PAD, HEAD = 1.1, 0.12, 3   # HEAD = how many first words identify a line
+import os
+# Nov 18 2026, Peter's style rules (shorts-guide 3-ter): "If you do too many cuts to the audio it goes too fast" and no voice
+# change. Default is now SMOOTH: real speed (1.0), and a pause INSIDE a kept take is never cut unless it is a long hesitation
+# (>= LONG_PAUSE s, trimmed to KEEP_PAUSE s). Old behaviour (1.1x, every pause > 0.25 s cut): SPEED=1.1 PAUSE_CUT=0.25.
+SPEED = float(os.environ.get("SPEED", "1.0"))
+PAD, HEAD = 0.12, 3   # HEAD = how many first words identify a line
+LONG_PAUSE = float(os.environ.get("PAUSE_CUT", "1.5"))   # pauses inside a take shorter than this stay as spoken
+KEEP_PAUSE = 0.25 if LONG_PAUSE <= 0.3 else 0.45          # what is left of a long pause (split around it)
 _n = lambda x: re.sub(r"[^a-z0-9']", "", x.lower())
 # Whisper's usual mishearings of our brand words, treated as the right word when MATCHING takes (captions use the Short's FIX map)
 ALIAS = {"cloud": "claude", "clod": "claude", "claud": "claude", "clawed": "claude", "emotion": "remotion", "promotion": "remotion",
@@ -141,6 +148,11 @@ for li, line in enumerate(lines):
     # are still this line (a misheard ending), so the take runs through them.
     # Not past a full stop: Nov 18 2026 the last line ran on into an unscripted "Thanks for watching."
     while end + 1 < stop and W[end + 1]["s"] - W[end]["e"] < 0.35 and not re.search(r"[.!?]$", W[end]["w"]): end += 1
+    # Nov 18 2026 (web-to-api, Peter removed "Two catches ... eleven cents" from the script): loose word matches ("bill" ~ "build")
+    # kept that unscripted speech inside line 7. Once the whole line has been said, the take ends at the first 2 s+ pause.
+    for j in range(pick, end):
+        if W[j + 1]["s"] - W[j]["e"] >= 2.0 and sim(" ".join(norm(w["w"]) for w in W[pick:j + 1] if norm(w["w"])), " ".join(line)) >= 0.85:
+            end = j; break
     # Retakes of a sentence INSIDE the line: keep the line's start, jump to the LAST attempt of each later sentence.
     ranges, cur = [], pick
     for sn in sentences[li][1:]:
@@ -182,7 +194,7 @@ for li, line in enumerate(lines):
         # the sound after the pause must SAY the dropped words again. Transcribe that clip alone and compare.
         dropped = [norm(w["w"]) for w in W[a0:k] if norm(w["w"])]
         if not gap: pass
-        else: on = min(on, W[k]["s"])   # after a pause Whisper's stamp already covers the re-said words (04: 162.73 s, not 163.34 s)
+        else: on = max(W[k]["s"], on - 0.3)   # the measured onset misses a soft first word ("but" ~163.1 s); Whisper's stamp (162.73 s) is early
         if not dropped or not resaid(on, W[k]["e"] + 0.6, dropped): continue
         print(f"  line {li+1}: restart after a {'silence inside' if long_word else 'pause before'} \"{W[k]['w']}\": the take starts at "
               f"{on:.2f}s (dropped \"{' '.join(w['w'] for w in W[a0:k])}\")")
@@ -216,20 +228,22 @@ for li, line in enumerate(lines):
 segs, line_starts, t_cut = [], [], 0.0
 # Line edges get a TIGHT pad: between lines Peter looks away to read the script (Nov 18 2026: "I'd like those moments to be cut").
 # Inside a line the normal pad keeps breaths natural. EDGE_IN before the first word, EDGE_OUT after the last.
-EDGE_IN, EDGE_OUT = 0.04, 0.07
+# SMOOTH (default since Nov 18 2026): a short eye-contact beat at each line edge (Peter now waits ~1 s at the lens before and
+# after each line, so 0.25/0.3 s never shows a look-away); env EDGE_IN/EDGE_OUT override (old tight values 0.04/0.07).
+EDGE_IN, EDGE_OUT = float(os.environ.get("EDGE_IN", "0.25")), float(os.environ.get("EDGE_OUT", "0.3"))
 for ranges in chosen:
     line_starts.append(round(t_cut / SPEED, 3))
-    for a, b in ranges:  # a dropped sentence retake between ranges is cut like a line edge (tight pads)
+    for a, b in ranges:  # a dropped sentence retake between ranges is cut like a line edge
         s = max(0, W[a]["s"] - EDGE_IN)
         for k in range(a, b):
-            if W[k + 1]["s"] - W[k]["e"] > 0.25:
-                segs.append((s, W[k]["e"] + PAD)); t_cut += segs[-1][1] - segs[-1][0]; s = W[k + 1]["s"] - PAD
+            if W[k + 1]["s"] - W[k]["e"] > LONG_PAUSE:
+                h = KEEP_PAUSE / 2
+                segs.append((s, W[k]["e"] + h)); t_cut += segs[-1][1] - segs[-1][0]; s = W[k + 1]["s"] - h
         segs.append((s, W[b]["e"] + EDGE_OUT)); t_cut += segs[-1][1] - segs[-1][0]
 json.dump(line_starts, open(lj, "w"))
 f = [f"[0:v]trim={a:.2f}:{b:.2f},setpts=PTS-STARTPTS[v{i}];[0:a]atrim={a:.2f}:{b:.2f},asetpts=PTS-STARTPTS[a{i}]" for i, (a, b) in enumerate(segs)]
 f.append("".join(f"[v{i}][a{i}]" for i in range(len(segs))) + f"concat=n={len(segs)}:v=1:a=1[vc][ac]")
 # Audio speed-up: env SPEEDUP overrides the filter (default atempo). AUDIO_ONLY=1 writes only the cut audio as WAV (voice A/B tests).
-import os
 af = os.environ.get("SPEEDUP", f"atempo={SPEED}")
 f.append(f"[vc]setpts=PTS/{SPEED},scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30[v];[ac]{af}[a]")
 if os.environ.get("AUDIO_ONLY"):
