@@ -1,0 +1,10 @@
+Claude Code can now build you a playable game from one sentence.
+It's called Claude Code Game Studios, and it has over 40 thousand stars on GitHub.
+It gives Claude 49 AI agents and 75 skills, like a whole game studio.
+You type slash prototype and describe your game. Say, paper boats racing down a rainy street.
+Claude asks a few questions, then writes a one-page brief for you to approve.
+Then it builds a browser game you open with a double click.
+Before you get it, it tests the game in a hidden browser and fixes what's broken.
+Then you change it just by asking, and every change is a checkpoint.
+When you like it, it grows into a real project, with Godot, Unity and Unreal supported too.
+It's open source and free. Link's in the description.

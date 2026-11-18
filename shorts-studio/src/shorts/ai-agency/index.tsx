@@ -190,7 +190,7 @@ const S8Outbound: React.FC<{d: number}> = ({d}) => (
   <Card top={TOP} h={H} d={d} fill={1.03} url="agency-agents/sales/sales-outbound-strategist.md">
     <AgentHead d={d} icon="bullseye_flat.svg" name="Outbound Strategist" division="SALES" color={SALES}
       role={<><Sweep d={d} from={8} to={22}>Picks who to target.</Sweep> <Sweep d={d} from={24} to={40}>Plans the cold email sequence.</Sweep></>} />
-    <Example d={d} at={36} title="Sequence for Acme Roofing" lines={["Target: roofers, 5 to 50 staff", "Day 1 email · Day 3 call · Day 7 email", "Subject: more jobs this storm season?"]} />
+    <Example d={d} at={8} title="Sequence for Acme Roofing" lines={["Target: roofers, 5 to 50 staff", "Day 1 email · Day 3 call · Day 7 email", "Subject: more jobs this storm season?"]} />
   </Card>
 );
 
@@ -281,7 +281,7 @@ const S13End: React.FC<{d: number}> = ({d}) => <EndCard d={d} />;
 export const aiagency = makeShort({
   slug: "ai-agency",
   words: words as W[],
-  fix: {cloud: "Claude", claud: "Claude", agencies: "Agency", "169,000": "169 thousand", links: "Link's"},
+  fix: {cloud: "Claude", claud: "Claude", agencies: "Agency", "169,000": "169 thousand", "169 ,000": "169 thousand", links: "Link's", naming: "name", rep: "reps", "call email": "cold email"},
   key: ["free", "169", "one", "once", "name", "three", "target", "proposal", "human", "prospecting", "closing", "support", "hires"],
   noun: ["claude", "agency", "agents", "github", "outbound", "strategist", "customer", "service"],
   anchors: [
@@ -291,5 +291,5 @@ export const aiagency = makeShort({
   ],
   hookEnd: 2,
   hook: {brand: "Claude Code", rest: "Just Got", box: "283 Free Specialists", brandColor: "#D97757"},
-  faceSrcTop: 690,
+  faceSrcTop: 625,
 });

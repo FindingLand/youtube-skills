@@ -74,7 +74,33 @@ def drop_restarts(a, b, li):
         if k - 1 > j + 2 and cut < j and norm(W[k - 1]["w"])[:4] == norm(W[cut]["w"])[:4] and W[k]["s"] - W[k - 1]["e"] <= 0.25: k -= 1
         print(f"  line {li+1}: restart \"{' '.join(tri(j))}\" said again, cut \"{' '.join(w['w'] for w in W[cut:k])}\"")
         if cut > a: out.append((a, cut - 1))
+        # Nov 18 2026 (ai-agency): the retake "handles questions and complaints" was transcribed from "questions" (104.36 s)
+        # while "handles" was spoken at 104.0 s. After a pause the kept try starts where its sound starts.
+        if k > 0 and W[k]["s"] - W[k - 1]["e"] > 0.5:
+            on = speech_onset(W[k]["s"], W[k - 1]["e"])
+            if on < W[k]["s"] - 0.05:
+                print(f"  line {li+1}: the kept try starts at the sound onset {on:.2f}s, not {W[k]['s']:.2f}s")
+                W[k]["s"] = on
         a = k
+
+def speech_onset(t, floor, back=0.6, db=-45.0):
+    """Earliest time of the continuous sound run that ends at t (10 ms frames over db dBFS), looking back at most `back` s and
+    never before `floor` (the previous word's end)."""
+    import array, math
+    a0 = max(floor, t - back)
+    pcm = subprocess.run([FF, "-v", "error", "-ss", f"{a0:.3f}", "-to", f"{t:.3f}", "-i", raw, "-vn", "-ac", "1", "-ar", "16000",
+                          "-f", "s16le", "-"], capture_output=True).stdout
+    s = array.array("h", pcm); n = 160
+    loud = [math.sqrt(sum(x * x for x in s[i:i + n]) / n) > 32768 * 10 ** (db / 20) for i in range(0, len(s) - n + 1, n)]
+    # walk back through the sound run; a quiet gap under 0.15 s (between words) does not end it
+    k, gap = len(loud), 0
+    while k > 0:
+        if loud[k - 1]: gap = 0
+        elif gap + 1 > 15: break
+        else: gap += 1
+        k -= 1
+    while k < len(loud) and not loud[k]: k += 1   # back to the first loud frame
+    return round(a0 + k * n / 16000, 2) if k < len(loud) and any(loud) else t
 
 attempts = [find_attempts(l) for l in lines]
 chosen, lo = [], 0
@@ -108,6 +134,10 @@ for li, line in enumerate(lines):
         for j in range(cur + 1, end + 1):
             got = " ".join(norm(W[j + k]["w"]) for k in range(HEAD) if j + k <= end)
             sc = sim(got, " ".join(sn[:HEAD]))
+            # Nov 18 2026 (web-to-api): "The AI builds you for every bill" was a false start of "The AI model bills you...":
+            # only 2 head words match. A try that starts after a pause of 1 s+ with the sentence's first 2 words counts too.
+            if sc < 0.8 and len(sn) >= 2 and len(sn[0] + sn[1]) >= 5 and j + 1 <= end and \
+               [norm(W[j]["w"]), norm(W[j + 1]["w"])] == sn[:2] and W[j]["s"] - W[j - 1]["e"] > 1.0: sc = 0.8
             if sc < 0.8: continue
             if tries and j - tries[-1][0] < HEAD:   # same attempt: keep the best-scoring start ("it... you describe" -> "you")
                 if sc > tries[-1][1]: tries[-1] = (j, sc)
@@ -120,8 +150,25 @@ for li, line in enumerate(lines):
     ranges = [r for a, b in ranges for r in drop_restarts(a, b, li)]
     chosen.append(ranges); lo = stop
     print(f"line {li+1}: {len([i for i in cand if i < stop])} attempt(s), using the last: \"{' / '.join(' '.join(w['w'] for w in W[a:b+1]) for a, b in ranges)}\"")
+    # Nov 18 2026 (ai-agency): Whisper stamped "283" at 1.14 s while "two hundred eighty-three" started at 0.2 s, so the cut said
+    # "83". Every line starts where its sound starts: up to 0.6 s before the first word's stamp, 1.2 s when it is a number.
+    f0 = ranges[0][0]
+    if not (pick != f0 and W[f0]["s"] - W[f0 - 1]["e"] <= 0.5):
+        floor = W[f0 - 1]["e"] + 0.1 if f0 else 0.0
+        on = speech_onset(W[f0]["s"], floor, back=1.2 if re.search(r"\d", W[f0]["w"]) else 0.6)
+        if on < W[f0]["s"] - 0.05:
+            print(f"  line {li+1}: starts at the sound onset {on:.2f}s, not {W[f0]['s']:.2f}s (\"{W[f0]['w']}\")")
+            W[f0]["s"] = on
     # Nov 17 2026: the EGM take started recording late and "Google" (the hook's first word) was never captured. Say so loudly.
     if norm(W[pick]["w"]) != line[0] and not difflib.get_close_matches(norm(W[pick]["w"]), [line[0]], cutoff=0.8):
+        # Nov 18 2026 (web-to-api): "A browser opens" was transcribed as "Browser opens"; the "A" (33.5-33.7 s) was in the audio
+        # and the tight edge pad cut it. When the script's first word is short and the take starts on its SECOND word, the take
+        # starts where the sound starts (up to 0.6 s earlier).
+        if len(line) > 1 and len(line[0]) <= 3 and difflib.get_close_matches(norm(W[pick]["w"]), [line[1]], cutoff=0.8):
+            on = speech_onset(W[pick]["s"], max(0.0, (W[pick - 1]["e"] if pick else 0.0)))
+            if on < W[pick]["s"] - 0.05:
+                print(f"  line {li+1}: \"{line[0]}\" not transcribed; the take starts at the sound onset {on:.2f}s, not {W[pick]['s']:.2f}s")
+                W[pick]["s"] = on; continue
         print(f"  WARNING line {li+1}: the take starts on \"{W[pick]['w']}\", the script starts on \"{line[0]}\". "
               f"{'Recording started late? ' if li == 0 and W[pick]['s'] < 0.3 else ''}Check this line before trusting the cut.")
 

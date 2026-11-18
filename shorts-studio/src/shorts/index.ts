@@ -4,6 +4,8 @@ import {claudeedits} from "./claude-edits";
 import {fiveplugins} from "./five-plugins";
 import {webtoapi} from "./web-to-api";
 import {aiagency} from "./ai-agency";
+import {blenderskills} from "./blender-skills";
+import {gamestudios} from "./game-studios";
 
 export const SHORTS: Record<string, {Short: React.FC; DURATION: number}> = {
   egm,
@@ -11,4 +13,6 @@ export const SHORTS: Record<string, {Short: React.FC; DURATION: number}> = {
   "five-plugins": fiveplugins,
   "web-to-api": webtoapi,
   "ai-agency": aiagency,
+  "blender-skills": blenderskills,
+  "game-studios": gamestudios,
 };

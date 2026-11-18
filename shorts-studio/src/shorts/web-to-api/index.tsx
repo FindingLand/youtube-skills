@@ -232,7 +232,7 @@ const Catches: React.FC<{d: number; second?: boolean}> = ({d, second}) => {
             <div style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 140, color: GOLDFISH, lineHeight: 1}}>{`$${(Math.round(cents) / 100).toFixed(2)}`}</div>
           </div>
           <div style={{marginTop: 10, fontSize: 42, fontWeight: 700}}>AI model cost per build</div>
-          <Pill text="on their demo" d={d} at={44} />
+          <Pill text="billed per build (their demo)" d={d} at={44} />
         </div>
       </div>
     </Card>
@@ -246,7 +246,7 @@ const Catches: React.FC<{d: number; second?: boolean}> = ({d, second}) => {
           <div>
             <div style={{fontSize: 40, fontWeight: 700}}>AI model cost per build</div>
             <div style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 80, color: GOLDFISH, lineHeight: 1.05}}>$0.11</div>
-            <Pill text="on their demo" d={99} at={44} />
+            <Pill text="billed per build" d={99} at={44} />
           </div>
         </div>
         {second && (
@@ -303,7 +303,7 @@ const S14End: React.FC<{d: number}> = ({d}) => {
 export const webtoapi = makeShort({
   slug: "web-to-api",
   words: words as W[],
-  fix: {},
+  fix: {cloud: "Claude", claud: "Claude", plotcode: "Claude Code", links: "Link's", lifts: "listings", shift: "sheet", shit: "sheet", "scraping build": "scraping bill", builds: "bills", "11": "eleven", "your demo": "their demo"},
   key: ["free", "website", "request", "directly", "whenever", "sheet", "monthly", "catches", "cents", "block"],
   noun: ["reverse", "api", "engineer", "claude", "code"],
   anchors: [
@@ -313,5 +313,5 @@ export const webtoapi = makeShort({
   ],
   hookEnd: 2,
   hook: {brand: "Claude Code", rest: "Reads", box: "Almost Any Website", brandColor: "#D97757"},
-  faceSrcTop: 690,
+  faceSrcTop: 640,
 });

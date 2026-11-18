@@ -18,6 +18,11 @@ for p in (raw, script, scenes):
     if not p.exists(): sys.exit(f"missing: {p}")
 if f"./{slug}" not in (ROOT / "src" / "shorts" / "index.ts").read_text(): sys.exit(f"{slug} is not registered in src/shorts/index.ts")
 log, t0 = [], time.time()
+# Nov 18 2026: every Remotion render/still leaves a remotion-*-assets* folder (~92 MB) in %TEMP%; 1,061 of them had filled
+# 67 GB of C:. Stale ones (over 30 min old, so no live render loses its files) are removed before each run.
+_tmp = pathlib.Path(os.environ.get("TEMP", "/tmp"))
+for d in _tmp.glob("remotion-*"):
+    if time.time() - d.stat().st_mtime > 1800: shutil.rmtree(d, ignore_errors=True)
 
 def run(label, cmd, cwd=ROOT):
     t = time.time()

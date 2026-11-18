@@ -1,0 +1,11 @@
+Claude Code can now build 3D models in Blender for you.
+It's called Blender Skills, a free pack of 94 skills with over four thousand stars on GitHub.
+Each skill teaches Claude one job a 3D artist does.
+Modeling, materials, lighting, rigging, animation, even export to Unity, Unreal and Godot.
+You connect Blender to Claude once, with a free add-on called Blender MCP.
+Then you just describe what you want. Say, a low poly sci-fi rifle for a game.
+A director skill reads your request and picks the right skills, in order.
+Model, then UVs, then materials, then export. Claude does the work inside Blender.
+You can even attach a photo, and it builds a match.
+One catch: you still need Blender installed, and a paid Claude plan.
+But the skills are open source and free. Link's in the description.
