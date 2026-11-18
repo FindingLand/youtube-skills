@@ -10,7 +10,10 @@ import json, subprocess, sys, re, difflib, psutil
 from ffpath import FF
 raw, wj, sj, out, lj = sys.argv[1:6]
 SPEED, PAD, HEAD = 1.1, 0.12, 3   # HEAD = how many first words identify a line
-norm = lambda x: re.sub(r"[^a-z0-9']", "", x.lower())
+_n = lambda x: re.sub(r"[^a-z0-9']", "", x.lower())
+# Whisper's usual mishearings of our brand words, treated as the right word when MATCHING takes (captions use the Short's FIX map)
+ALIAS = {"cloud": "claude", "clod": "claude", "claud": "claude", "clawed": "claude", "emotion": "remotion", "promotion": "remotion"}
+norm = lambda x: ALIAS.get(_n(x), _n(x))
 W = [w for w in json.load(open(wj)) if norm(w["w"])]
 lines = [[norm(x) for x in l.split() if norm(x)] for l in open(sj, encoding="utf-8").read().splitlines() if l.strip()]
 
@@ -23,6 +26,23 @@ def score(i, line):
 def find_attempts(line):
     hits = [(i, score(i, line)) for i in range(len(W))]
     hits = [(i, sc) for i, sc in hits if sc >= 0.75]
+    if not hits:
+        # Fallback (Nov 18 2026: "Even these captions" was heard as "Even discussions"): match the line's NEXT words
+        # (words 3-5, then 4-6) and step back to where the line must have started.
+        for k in (2, 3):
+            if len(line) < k + HEAD: break
+            win = " ".join(line[k:k + HEAD])
+            for i in range(len(W)):
+                got = " ".join(norm(W[i + j]["w"]) for j in range(HEAD) if i + j < len(W))
+                if sim(got, win) >= 0.8:
+                    # the misheard part may have a different word count: look back for the line's real first word
+                    start = next((j for j in range(i - 1, max(-1, i - k - 2), -1)
+                                  if difflib.get_close_matches(norm(W[j]["w"]), [line[0]], cutoff=0.8)), max(0, i - k))
+                    hits.append((start, sim(got, win) - 0.1))
+            if hits:
+                print(f"  NOTE: \"{' '.join(line[:HEAD])}\" not heard as written; matched on \"{win}\" instead")
+                break
+        hits.sort()
     out = []  # neighbouring hits (within HEAD words) are ONE attempt: keep the best-scoring index of each cluster
     for i, sc in hits:
         if out and i - out[-1][0] < HEAD:

@@ -57,7 +57,7 @@ const S2Phone: React.FC<{d: number}> = ({d}) => {
 
 // 3. "Whisper writes down every word I say, with timestamps." The real first rows of this Short's words.json
 const S3Words: React.FC<{d: number}> = ({d}) => {
-  const rows = WORDS.slice(0, 5).map((x) => [x.w.replace(/[.,!?]$/, ""), x.s.toFixed(2), x.e.toFixed(2)]);
+  const rows = WORDS.slice(0, 5).map((x) => [(({cloud: "Claude", clod: "Claude", claud: "Claude"} as Record<string, string>)[x.w.toLowerCase().replace(/[.,!?]$/, "")] ?? x.w.replace(/[.,!?]$/, "")), x.s.toFixed(2), x.e.toFixed(2)]);
   const shown = Math.floor(interpolate(d, [2, 20], [0, rows.length], clamp));
   const tag = (t: string, at: number) => <div style={{fontFamily: SANS, fontWeight: 800, fontSize: 38, color: "#fff", background: BAD, padding: "8px 18px", borderRadius: 10, opacity: pop(d, at), transform: `scale(${0.85 + 0.15 * pop(d, at)})`}}>{t}</div>;
   return (
@@ -81,7 +81,7 @@ const S3Words: React.FC<{d: number}> = ({d}) => {
 
 // 4. "Then a script keeps my last try at each line." cut_takes.py prints "line N: K attempt(s), using the last"
 const S4Cut: React.FC<{d: number}> = ({d}) => {
-  const out: [string, string, number][] = [["line 5: 4 attempt(s),", "#E6E6E6", 12], ["  using the last", "#5BD68A", 16], ["line 6: 2 attempt(s),", "#E6E6E6", 22], ["  using the last", "#5BD68A", 26]];
+  const out: [string, string, number][] = [["line 10: 2 attempt(s),", "#E6E6E6", 12], ["  using the last", "#5BD68A", 16], ["line 12: 3 attempt(s),", "#E6E6E6", 22], ["  using the last", "#5BD68A", 26]];
   return (
     <Card dark top={TOP} h={H} d={d} fill={1.2} title="Terminal · ~/shorts-studio">
       <div style={{display: "flex", alignItems: "center", gap: 14}}><Logo src="python.svg" size={48} /><Mono c="#8A8A8A" size={32}>cut_takes.py</Mono></div>
@@ -165,14 +165,14 @@ const S6Code: React.FC<{d: number}> = ({d}) => {
 // 7. "Even these captions light up as I say them." Same rule as the real captions: grey until said, then ink, keyword blue
 const S7Captions: React.FC<{d: number}> = ({d}) => {
   const demo = ["Even", "these", "captions", "light", "up"];
-  const cap = WORDS.find((x) => x.w.toLowerCase().startsWith("captions"));
+  const cap = WORDS.find((x) => /^(captions|discussions)/.test(x.w.toLowerCase()));
   const chip = (dot: string, label: string, at: number) => (
     <div style={{display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", borderRadius: 14, border: "2px solid #E1E5EA", background: "#F4F6F9", opacity: pop(d, at), fontSize: 34, fontWeight: 700, color: "#3B434C"}}>
       <div style={{width: 26, height: 26, borderRadius: 13, background: dot}} />{label}
     </div>
   );
   return (
-    <Card top={TOP} h={H} d={d} fill={1.05} title="kit.tsx · Captions">
+    <Card top={TOP} h={H} d={d} fill={1.08} title="kit.tsx · Captions">
       <div style={{fontFamily: SANS, color: INK}}>
         <div style={{fontSize: 34, color: "#59636E", fontWeight: 600}}>Karaoke captions, from my real word times</div>
         <div style={{marginTop: 14, fontSize: 104, fontWeight: 800, letterSpacing: -2, lineHeight: 1.1, display: "flex", flexWrap: "wrap", columnGap: 26}}>
@@ -317,15 +317,15 @@ const S12End: React.FC<{d: number}> = ({d}) => <EndCard d={d} folder="shorts-stu
 export const claudeedits = makeShort({
   slug: "claude-edits",
   words: WORDS,
-  fix: {cloud: "Claude", clod: "Claude", claud: "Claude", emotion: "Remotion", promotion: "Remotion", links: "Link's"},
+  fix: {cloud: "Claude", clod: "Claude", claud: "Claude", emotion: "Remotion", promotion: "Remotion", links: "Link's", discussions: "these captions", post: "pause", react: "React"},
   key: ["free", "retakes", "timestamps", "last", "pause", "scene", "captions", "agent", "eleven"],
   noun: ["claude", "whisper", "remotion", "react"],
   anchors: [
     ["claude code edited", S1Hook], ["i filmed", S2Phone], ["whisper writes", S3Words], ["then a script", S4Cut], ["it cuts", S5Pauses],
-    ["every scene", S6Code], ["even these", S7Captions], ["before i", S8Frames], ["it levels", S9Audio], ["my last", S10Time],
+    ["every scene", S6Code], ["light up", S7Captions], ["before i", S8Frames], ["it levels", S9Audio], ["my last", S10Time],
     ["i just", S11Split], ["and the whole", S12End],
   ],
   hookEnd: 2,
   hook: {brand: "Claude Code", rest: "Edited", box: "This Entire Short", brandColor: "#D97757"},
-  faceSrcTop: 690,
+  faceSrcTop: 820,
 });

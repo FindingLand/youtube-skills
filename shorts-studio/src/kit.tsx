@@ -206,8 +206,13 @@ export const makeShort = (cfg: ShortConfig) => {
   // Face card: rounded top + gutters, bottom-aligned so neck and shoulders always show, zoomed OUT so the top of the hair
   // shows too (Peter, Nov 17 2026). Side gaps are filled with a blurred still of the wall (public/<slug>/wall.jpg, made by
   // make_short.py): a still, not a second video, because a second OffthreadVideo doubled the render time.
+  // srcTop = source row shown at the card's top edge (~60 px above the hair). Height = the larger of "full width, no side gaps"
+  // (cover) and "bottom-aligned zoom-out". A wide take (Nov 18) fits with cover: no blurred side bars; a close take (Nov 17)
+  // needs the zoom-out and gets the wall still at the sides.
   const srcTop = cfg.faceSrcTop ?? 690;
-  const FACE_H = Math.round((1920 - FACE_CARD_TOP) / (1920 - srcTop) * 1920);
+  const VIS_H = 1920 - FACE_CARD_TOP, CARD_W = 1080 - 92;
+  const FACE_H = Math.max(Math.round(VIS_H / (1920 - srcTop) * 1920), Math.ceil(CARD_W * 1920 / 1080));
+  const FACE_TOP = -Math.round(srcTop * FACE_H / 1920);   // video top, in card coordinates
   const ShotWrap: React.FC<{el: Scene}> = ({el: El}) => <El d={useCurrentFrame()} />;
 
   const Short: React.FC = () => {
@@ -217,9 +222,10 @@ export const makeShort = (cfg: ShortConfig) => {
         <Audio src={face} />
         <div style={{position: "absolute", left: 46, right: 46, top: FACE_CARD_TOP, bottom: -60, borderRadius: 65, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,.18)"}}>
           <Img src={staticFile(`${cfg.slug}/wall.jpg`)} style={{position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover"}} />
-          <OffthreadVideo src={face} muted style={{position: "absolute", bottom: 60, left: "50%", transform: "translateX(-50%)",
+          <OffthreadVideo src={face} muted style={{position: "absolute", top: FACE_TOP, left: "50%", transform: "translateX(-50%)",
             height: FACE_H, width: FACE_H * 1080 / 1920, maxWidth: "none",
-            WebkitMaskImage: "linear-gradient(90deg, transparent 0, #000 60px, #000 calc(100% - 60px), transparent 100%)"}} />
+            // edge fade only when zoomed out (side gaps); a full-width take needs none (Nov 18: the fade darkened the card edges)
+          WebkitMaskImage: FACE_H * 1080 / 1920 < CARD_W - 2 ? "linear-gradient(90deg, transparent 0, #000 60px, #000 calc(100% - 60px), transparent 100%)" : "none"}} />
         </div>
         <HookTitle />
         {shots.map((x) => (
