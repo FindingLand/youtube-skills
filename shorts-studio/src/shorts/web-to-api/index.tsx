@@ -303,7 +303,7 @@ const S14End: React.FC<{d: number}> = ({d}) => {
 export const webtoapi = makeShort({
   slug: "web-to-api",
   words: words as W[],
-  fix: {cloud: "Claude", claud: "Claude", plotcode: "Claude Code", links: "Link's", lifts: "listings", shift: "sheet", shit: "sheet", "scraping build": "scraping bill", builds: "bills", "11": "eleven", "your demo": "their demo"},
+  fix: {cloud: "Claude", claud: "Claude", plotcode: "Claude Code", "plot code": "Claude Code", sides: "sites", butt: "bot", links: "Link's", lifts: "listings", shift: "sheet", shit: "sheet", "scraping build": "scraping bill", builds: "bills", "11": "eleven", "your demo": "their demo"},
   key: ["free", "website", "request", "directly", "whenever", "sheet", "monthly", "catches", "cents", "block"],
   noun: ["reverse", "api", "engineer", "claude", "code"],
   anchors: [

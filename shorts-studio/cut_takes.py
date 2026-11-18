@@ -102,6 +102,21 @@ def speech_onset(t, floor, back=0.6, db=-45.0):
     while k < len(loud) and not loud[k]: k += 1   # back to the first loud frame
     return round(a0 + k * n / 16000, 2) if k < len(loud) and any(loud) else t
 
+_wm = None
+def resaid(t0, t1, dropped):
+    """True when the audio t0..t1, transcribed on its own, starts with the dropped words (a restart of the line)."""
+    global _wm
+    import tempfile, os
+    if _wm is None:
+        from faster_whisper import WhisperModel
+        _wm = WhisperModel("small", device="cpu", compute_type="int8", cpu_threads=2)
+    wav = os.path.join(tempfile.gettempdir(), "resaid_clip.wav")
+    subprocess.run([FF, "-v", "error", "-y", "-ss", f"{max(0, t0 - 0.15):.3f}", "-to", f"{t1:.3f}", "-i", raw, "-vn", "-ac", "1",
+                    "-ar", "16000", wav], check=True)
+    segs, _ = _wm.transcribe(wav, language="en", condition_on_previous_text=False)
+    heard = [norm(x) for s in segs for x in s.text.split() if norm(x)]
+    return sim(" ".join(heard[:len(dropped)]), " ".join(dropped)) >= 0.75
+
 attempts = [find_attempts(l) for l in lines]
 chosen, lo = [], 0
 for li, line in enumerate(lines):
@@ -148,6 +163,31 @@ for li, line in enumerate(lines):
             print(f"  line {li+1}: sentence \"{' '.join(sn[:HEAD])}\" said {len(tries)} times, using the last")
     ranges.append((cur, end))
     ranges = [r for a, b in ranges for r in drop_restarts(a, b, li)]
+    # Nov 18 2026 (web-to-api, Peter: "'But the tool is free' ... the line is almost repeated twice"): he said "But the tool",
+    # paused 4 s, then said the whole line again. Whisper dropped the repeat and stretched ONE word "tool" over 158.5-163.8 s, so
+    # no pause was cut and both tries stayed. A word near the line start that spans a silence of 1 s+ hides a restart: the kept
+    # try starts where the LAST sound run inside that word starts, and the words before it (the false start) are dropped.
+    # With VAD on, the same restart shows as a 2 s+ GAP inside the line's first words ("but the" 158.2 s, "tool" 162.7 s, the
+    # retake "but the tool" hidden in that one word). Peter's habit: a long pause right after starting a line = he looked at
+    # the script and restarted it. Both shapes: keep from the sound run that ends the long word / follows the gap.
+    a0, b0 = ranges[0]
+    for k in range(a0, min(a0 + HEAD + 1, b0 + 1)):
+        long_word = W[k]["e"] - W[k]["s"] >= 1.5
+        gap = k > a0 and W[k]["s"] - W[k - 1]["e"] >= 2.0
+        if not (long_word or gap): continue
+        floor = W[k]["s"] if long_word else W[k - 1]["e"] + 0.3
+        on = speech_onset(W[k]["e"], floor, back=W[k]["e"] - floor)
+        if long_word and on - W[k]["s"] <= 1.0: continue
+        # Proof it is a restart, not a mid-line pause (05: "engineers, designers, marketers, [pause] sales reps" is ONE try):
+        # the sound after the pause must SAY the dropped words again. Transcribe that clip alone and compare.
+        dropped = [norm(w["w"]) for w in W[a0:k] if norm(w["w"])]
+        if not gap: pass
+        else: on = min(on, W[k]["s"])   # after a pause Whisper's stamp already covers the re-said words (04: 162.73 s, not 163.34 s)
+        if not dropped or not resaid(on, W[k]["e"] + 0.6, dropped): continue
+        print(f"  line {li+1}: restart after a {'silence inside' if long_word else 'pause before'} \"{W[k]['w']}\": the take starts at "
+              f"{on:.2f}s (dropped \"{' '.join(w['w'] for w in W[a0:k])}\")")
+        W[k]["s"] = on; ranges[0] = (k, b0)
+        break
     chosen.append(ranges); lo = stop
     print(f"line {li+1}: {len([i for i in cand if i < stop])} attempt(s), using the last: \"{' / '.join(' '.join(w['w'] for w in W[a:b+1]) for a, b in ranges)}\"")
     # Nov 18 2026 (ai-agency): Whisper stamped "283" at 1.14 s while "two hundred eighty-three" started at 0.2 s, so the cut said
