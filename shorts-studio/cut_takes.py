@@ -12,10 +12,15 @@ raw, wj, sj, out, lj = sys.argv[1:6]
 SPEED, PAD, HEAD = 1.1, 0.12, 3   # HEAD = how many first words identify a line
 _n = lambda x: re.sub(r"[^a-z0-9']", "", x.lower())
 # Whisper's usual mishearings of our brand words, treated as the right word when MATCHING takes (captions use the Short's FIX map)
-ALIAS = {"cloud": "claude", "clod": "claude", "claud": "claude", "clawed": "claude", "emotion": "remotion", "promotion": "remotion"}
+ALIAS = {"cloud": "claude", "clod": "claude", "claud": "claude", "clawed": "claude", "emotion": "remotion", "promotion": "remotion",
+         # Nov 18 2026 (five-plugins): Whisper writes spoken numbers as digits ("5 Claude plugins") and hears "n8n" as "N810"
+         "1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "n810": "n8n", "n8": "n8n", "nan": "n8n"}
 norm = lambda x: ALIAS.get(_n(x), _n(x))
 W = [w for w in json.load(open(wj)) if norm(w["w"])]
-lines = [[norm(x) for x in l.split() if norm(x)] for l in open(sj, encoding="utf-8").read().splitlines() if l.strip()]
+raw_lines = [l for l in open(sj, encoding="utf-8").read().splitlines() if l.strip()]
+lines = [[norm(x) for x in l.split() if norm(x)] for l in raw_lines]
+# each line's sentences (for retakes of a sentence INSIDE a line, Nov 18 2026: "It teaches Claude..." said twice in line 3)
+sentences = [[[norm(x) for x in s.split() if norm(x)] for s in re.split(r"(?<=[.!?])\s+", l) if s.strip()] for l in raw_lines]
 
 def sim(a, b): return difflib.SequenceMatcher(None, a, b).ratio()
 def score(i, line):
@@ -50,6 +55,27 @@ def find_attempts(line):
         else: out.append((i, sc))
     return [i for i, _ in out]
 
+def drop_restarts(a, b, li):
+    """Mid-sentence restarts (Nov 18 2026, line 4: "clicks, fields in forms and pulls data from real browsers... /
+    Fills in forms and pulls data from sites with no API"): when 3 words repeat inside a take, the earlier try is cut from
+    the pause before it to the LAST repeat. A word right before the repeat that Whisper merged ("FieldSync" = "Fills in")
+    stays with the kept try."""
+    out = []
+    while True:
+        tri = lambda j: tuple(norm(W[j + k]["w"]) for k in range(3))
+        hit = None
+        for j in range(a, b - 4):
+            ks = [k for k in range(j + 3, b - 1) if tri(k) == tri(j)]
+            if ks: hit = (j, ks[-1]); break
+        if not hit: return out + [(a, b)]
+        j, k = hit
+        cut = j
+        while cut > a and W[cut]["s"] - W[cut - 1]["e"] <= 0.25: cut -= 1
+        if k - 1 > j + 2 and cut < j and norm(W[k - 1]["w"])[:4] == norm(W[cut]["w"])[:4] and W[k]["s"] - W[k - 1]["e"] <= 0.25: k -= 1
+        print(f"  line {li+1}: restart \"{' '.join(tri(j))}\" said again, cut \"{' '.join(w['w'] for w in W[cut:k])}\"")
+        if cut > a: out.append((a, cut - 1))
+        a = k
+
 attempts = [find_attempts(l) for l in lines]
 chosen, lo = [], 0
 for li, line in enumerate(lines):
@@ -58,15 +84,42 @@ for li, line in enumerate(lines):
     nxt = [i for i in (attempts[li + 1] if li + 1 < len(lines) else []) if i > cand[0]]
     stop = nxt[0] if nxt else len(W)
     pick = max(i for i in cand if i < stop)
+    # Nov 18 2026: "Third, Context 7" matched on "Context 7 Claude" (the dropped-first-word allowance) and "Third" was cut.
+    # If the word just before the match IS the line's first word, spoken right before it, the take starts there.
+    # Also when Whisper split a word the match keyed on ("Second, play write from Microsoft": the match landed on "write").
+    prev_end = chosen[-1][-1][1] if chosen else -1
+    for back in (1, 2):
+        p = pick - back
+        if p > prev_end and difflib.get_close_matches(norm(W[p]["w"]), [line[0]], cutoff=0.8) and W[p + 1]["s"] - W[p]["e"] < 6:  # "Third, [4 s pause] Context 7"; the pause itself is cut below
+            pick = p; break
     # take ends at the last word of this attempt that is in this line, before the next line starts
     end = pick
     for j in range(pick, stop):
         if difflib.get_close_matches(norm(W[j]["w"]), line, n=1, cutoff=0.7): end = j
     # Nov 18 2026: "timestamps" was heard as "time sense." and dropped. Words spoken right after the last match, with no pause,
     # are still this line (a misheard ending), so the take runs through them.
-    while end + 1 < stop and W[end + 1]["s"] - W[end]["e"] < 0.35: end += 1
-    chosen.append((pick, end)); lo = stop
-    print(f"line {li+1}: {len([i for i in cand if i < stop])} attempt(s), using the last: \"{' '.join(w['w'] for w in W[pick:end+1])}\"")
+    # Not past a full stop: Nov 18 2026 the last line ran on into an unscripted "Thanks for watching."
+    while end + 1 < stop and W[end + 1]["s"] - W[end]["e"] < 0.35 and not re.search(r"[.!?]$", W[end]["w"]): end += 1
+    # Retakes of a sentence INSIDE the line: keep the line's start, jump to the LAST attempt of each later sentence.
+    ranges, cur = [], pick
+    for sn in sentences[li][1:]:
+        if len(sn) < HEAD: continue
+        tries = []
+        for j in range(cur + 1, end + 1):
+            got = " ".join(norm(W[j + k]["w"]) for k in range(HEAD) if j + k <= end)
+            sc = sim(got, " ".join(sn[:HEAD]))
+            if sc < 0.8: continue
+            if tries and j - tries[-1][0] < HEAD:   # same attempt: keep the best-scoring start ("it... you describe" -> "you")
+                if sc > tries[-1][1]: tries[-1] = (j, sc)
+            else: tries.append((j, sc))
+        tries = [j for j, _ in tries]
+        if len(tries) > 1:
+            ranges.append((cur, tries[0] - 1)); cur = tries[-1]
+            print(f"  line {li+1}: sentence \"{' '.join(sn[:HEAD])}\" said {len(tries)} times, using the last")
+    ranges.append((cur, end))
+    ranges = [r for a, b in ranges for r in drop_restarts(a, b, li)]
+    chosen.append(ranges); lo = stop
+    print(f"line {li+1}: {len([i for i in cand if i < stop])} attempt(s), using the last: \"{' / '.join(' '.join(w['w'] for w in W[a:b+1]) for a, b in ranges)}\"")
     # Nov 17 2026: the EGM take started recording late and "Google" (the hook's first word) was never captured. Say so loudly.
     if norm(W[pick]["w"]) != line[0] and not difflib.get_close_matches(norm(W[pick]["w"]), [line[0]], cutoff=0.8):
         print(f"  WARNING line {li+1}: the take starts on \"{W[pick]['w']}\", the script starts on \"{line[0]}\". "
@@ -77,13 +130,14 @@ segs, line_starts, t_cut = [], [], 0.0
 # Line edges get a TIGHT pad: between lines Peter looks away to read the script (Nov 18 2026: "I'd like those moments to be cut").
 # Inside a line the normal pad keeps breaths natural. EDGE_IN before the first word, EDGE_OUT after the last.
 EDGE_IN, EDGE_OUT = 0.04, 0.07
-for a, b in chosen:
+for ranges in chosen:
     line_starts.append(round(t_cut / SPEED, 3))
-    s = max(0, W[a]["s"] - EDGE_IN)
-    for k in range(a, b):
-        if W[k + 1]["s"] - W[k]["e"] > 0.25:
-            segs.append((s, W[k]["e"] + PAD)); t_cut += segs[-1][1] - segs[-1][0]; s = W[k + 1]["s"] - PAD
-    segs.append((s, W[b]["e"] + EDGE_OUT)); t_cut += segs[-1][1] - segs[-1][0]
+    for a, b in ranges:  # a dropped sentence retake between ranges is cut like a line edge (tight pads)
+        s = max(0, W[a]["s"] - EDGE_IN)
+        for k in range(a, b):
+            if W[k + 1]["s"] - W[k]["e"] > 0.25:
+                segs.append((s, W[k]["e"] + PAD)); t_cut += segs[-1][1] - segs[-1][0]; s = W[k + 1]["s"] - PAD
+        segs.append((s, W[b]["e"] + EDGE_OUT)); t_cut += segs[-1][1] - segs[-1][0]
 json.dump(line_starts, open(lj, "w"))
 f = [f"[0:v]trim={a:.2f}:{b:.2f},setpts=PTS-STARTPTS[v{i}];[0:a]atrim={a:.2f}:{b:.2f},asetpts=PTS-STARTPTS[a{i}]" for i, (a, b) in enumerate(segs)]
 f.append("".join(f"[v{i}][a{i}]" for i in range(len(segs))) + f"concat=n={len(segs)}:v=1:a=1[vc][ac]")

@@ -126,7 +126,25 @@ const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9']/g, "");
 export const makeShort = (cfg: ShortConfig) => {
   const FIX = cfg.fix ?? {};
   const KEY = new Set(cfg.key ?? []), NOUN = new Set(cfg.noun ?? []);
-  const words: W[] = cfg.words.map((x) => {
+  // fix keys with a space join several Whisper words into one script word (Nov 18 2026: "Context 7." -> "Context7.",
+  // "300 ,000" -> "300,000"); the joined word spans first start to last end and keeps the last word's punctuation
+  const multi = Object.entries(FIX).filter(([k]) => k.includes(" ")).map(([k, v]) => [k.split(" "), v] as [string[], string]);
+  const bareP = (w: string) => w.toLowerCase().replace(/[.,!?]$/, "");
+  const joined: W[] = [];
+  for (let i = 0; i < cfg.words.length; i++) {
+    const hit = multi.find(([ks]) => ks.every((k, j) => cfg.words[i + j] && bareP(cfg.words[i + j].w) === k));
+    if (!hit) { joined.push(cfg.words[i]); continue; }
+    const n = hit[0].length, vs = hit[1].split(" ");
+    if (vs.length === n) {
+      // same word count = a fix in context, word for word ("5 skill" -> "Fifth Skill", while "5 claude" -> "Five Claude")
+      vs.forEach((v, j) => { const x = cfg.words[i + j]; joined.push({...x, w: v + (x.w.match(/[.,!?]$/)?.[0] ?? "")}); });
+    } else {
+      const last = cfg.words[i + n - 1];
+      joined.push({...cfg.words[i], w: hit[1] + (last.w.match(/[.,!?]$/)?.[0] ?? ""), e: last.e});
+    }
+    i += n - 1;
+  }
+  const words: W[] = joined.map((x) => {
     const m = x.w.match(/^(.*?)([.,!?]?)$/)!;
     const f = FIX[m[1].toLowerCase()];
     return {...x, w: f ? f + m[2] : x.w};

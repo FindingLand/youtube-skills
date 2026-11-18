@@ -35,7 +35,8 @@ const Term: React.FC<{cmd: string; d: number; at: number}> = ({cmd, d, at}) => {
       <div style={{fontFamily: MONO, fontSize: 24, color: "#8A8A8A", marginBottom: 4}}>Claude Code</div>
       <div style={{fontFamily: MONO, fontSize: 36, color: "#fff", lineHeight: 1.35}}>
         {/* lines may break only at a space or "@", never inside "n8n-skills" (a hyphen break read as "n8n- / skills") */}
-        <span style={{color: "#E37E55"}}>{"> "}</span>{t.split(/(?<=[\s@])/).map((p, i) => <span key={i} style={{whiteSpace: "nowrap"}}>{p}</span>)}{t.length < cmd.length && <Cursor d={d} />}
+        {/* <wbr/> between the nowrap chunks: without it there was NO break point and "...@claude-plugins-official" ran off the card (Nov 18 checker) */}
+        <span style={{color: "#E37E55", whiteSpace: "nowrap"}}>{"> "}</span>{t.split(/(?<=[\s@])/).map((p, i) => <React.Fragment key={i}>{i > 0 && <wbr />}<span style={{whiteSpace: "nowrap"}}>{p}</span></React.Fragment>)}{t.length < cmd.length && <Cursor d={d} />}
       </div>
     </div>
   );
@@ -114,7 +115,7 @@ const S2Slots: React.FC<{d: number}> = ({d}) => (
 
 const S3N8n: React.FC<{d: number}> = ({d}) => (
   <PluginRepo d={d} i={0} owner="czlonkowski" repo="n8n-skills" desc="Expert Claude Code skills for building n8n workflows"
-    badges={["★ 6.7k", "MIT", "14 skills"]} cmd="/plugin install czlonkowski/n8n-skills" fill={1.1} />
+    badges={["★ 6.7k", "MIT", "14 skills"]} cmd="/plugin install czlonkowski/n8n-skills" fill={1.04} />
 );
 
 const S4Nodes: React.FC<{d: number}> = ({d}) => {
@@ -179,7 +180,11 @@ const S6Browser: React.FC<{d: number}> = ({d}) => {
             <div style={{flex: 1, height: 74, borderRadius: 12, border: `3px solid ${d > (at as number) - 4 && (v as string).length < 15 ? BLUE : "#D1D9E0"}`, padding: "0 18px", display: "flex", alignItems: "center", fontSize: 38, color: INK}}>{v as string}</div>
           </div>
         ))}
-        <div style={{marginTop: 22, marginLeft: 190, width: 260, height: 74, borderRadius: 12, background: clicked ? "#0B63C4" : BLUE, color: "#fff", fontWeight: 800, fontSize: 38, display: "flex", alignItems: "center", justifyContent: "center"}}>Get prices</div>
+        {/* the payoff banner takes the button's slot (it used to float over the table rows, Nov 18 checker) */}
+        {d > 140 ? <div style={{marginTop: 22, height: 74, textAlign: "center", opacity: ban, transform: `scale(${0.85 + 0.15 * ban})`}}>
+          <span style={{display: "inline-block", background: BLUE, color: "#fff", borderRadius: 10, padding: "0 28px 6px", fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 60, lineHeight: "74px"}}>No API? No problem</span>
+        </div> :
+        <div style={{marginTop: 22, marginLeft: 190, width: 260, height: 74, borderRadius: 12, background: clicked ? "#0B63C4" : BLUE, color: "#fff", fontWeight: 800, fontSize: 38, display: "flex", alignItems: "center", justifyContent: "center"}}>Get prices</div>}
         <div style={{marginTop: 22, borderRadius: 12, border: "1px solid #D1D9E0", overflow: "hidden"}}>
           {rows.map((r, i) => d <= 96 + i * 10 ? <div key={r[0]} style={{height: 61, borderTop: i ? "1px solid #EEF1F4" : "none", background: "#FAFBFC"}} /> : (
             <div key={r[0]} style={{display: "flex", fontSize: 34, padding: "10px 18px", background: i % 2 ? "#F6F8FA" : "#fff", fontFamily: MONO, color: INK}}>
@@ -187,9 +192,6 @@ const S6Browser: React.FC<{d: number}> = ({d}) => {
             </div>
           ))}
         </div>
-        {d > 140 && <div style={{position: "absolute", left: 0, right: 0, bottom: 10, textAlign: "center", opacity: ban, transform: `scale(${0.85 + 0.15 * ban})`}}>
-          <span style={{display: "inline-block", background: BLUE, color: "#fff", borderRadius: 10, padding: "6px 28px 14px", fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 72}}>No API? No problem</span>
-        </div>}
         {d < 140 && <Pointer x={px} y={py + 40} down={(d > 10 && d < 16) || (d > 46 && d < 52) || (d > 84 && d < 90)} />}
       </div>
     </Card>
@@ -214,7 +216,7 @@ const S8Docs: React.FC<{d: number}> = ({d}) => {
     </div>
   );
   return (
-    <Card top={TOP} h={H} d={d} fill={1.14} title="Context7 · docs for your version">
+    <Card top={TOP} h={H} d={d} fill={0.92} title="Context7 · docs for your version">
       <div style={{display: "flex", gap: 26}}>
         {box("#FDEDEC", "#F5C2BE", BAD, "Old docs", "v1 API", "✕", a, true)}
         {box("#EAF7EE", "#B9E3C6", OK, "Current docs", "your version", "✓", b)}
@@ -327,7 +329,9 @@ const S14End: React.FC<{d: number}> = ({d}) => <EndCard d={d} big="All free" />;
 export const fiveplugins = makeShort({
   slug: "five-plugins",
   words: words as W[],
-  fix: {context7: "Context7", playwrite: "Playwright"},
+  // Whisper -> script spellings, from the Nov 18 2026 take; keys with a space are fixes in context (kit makeShort)
+  fix: {cloud: "Claude", clod: "Claude", claud: "Claude", heading: "headache", na10: "n8n", n810: "n8n", playwrite: "Playwright", fields: "fills",
+    version: "versions", brainstorms: "brainstorms", creator: "Creator", "4": "Fourth", "context 7": "Context7", "300 ,000": "300,000", "5 cloud": "Five Claude", "5 skill": "Fifth Skill"},
   key: ["headache", "right", "real", "current", "old", "stars", "tests", "once", "free"],
   noun: ["claude", "n8n", "playwright", "microsoft", "context7", "superpowers", "skill", "creator", "anthropic", "github"],
   anchors: [
@@ -338,5 +342,5 @@ export const fiveplugins = makeShort({
   ],
   hookEnd: 2,
   hook: {brand: "5 Claude", rest: "Plugins For", box: "Automation Builders", brandColor: "#D97757"},
-  faceSrcTop: 690,
+  faceSrcTop: 655,  // Nov 18 take: hair top at source y 690-704 (2 frames), white wall, framed wide
 });
