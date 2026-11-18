@@ -62,6 +62,9 @@ for li, line in enumerate(lines):
     end = pick
     for j in range(pick, stop):
         if difflib.get_close_matches(norm(W[j]["w"]), line, n=1, cutoff=0.7): end = j
+    # Nov 18 2026: "timestamps" was heard as "time sense." and dropped. Words spoken right after the last match, with no pause,
+    # are still this line (a misheard ending), so the take runs through them.
+    while end + 1 < stop and W[end + 1]["s"] - W[end]["e"] < 0.35: end += 1
     chosen.append((pick, end)); lo = stop
     print(f"line {li+1}: {len([i for i in cand if i < stop])} attempt(s), using the last: \"{' '.join(w['w'] for w in W[pick:end+1])}\"")
     # Nov 17 2026: the EGM take started recording late and "Google" (the hook's first word) was never captured. Say so loudly.
@@ -71,13 +74,16 @@ for li, line in enumerate(lines):
 
 # segments: chosen takes, split on pauses > 0.25 s
 segs, line_starts, t_cut = [], [], 0.0
+# Line edges get a TIGHT pad: between lines Peter looks away to read the script (Nov 18 2026: "I'd like those moments to be cut").
+# Inside a line the normal pad keeps breaths natural. EDGE_IN before the first word, EDGE_OUT after the last.
+EDGE_IN, EDGE_OUT = 0.04, 0.07
 for a, b in chosen:
     line_starts.append(round(t_cut / SPEED, 3))
-    s = max(0, W[a]["s"] - PAD)
+    s = max(0, W[a]["s"] - EDGE_IN)
     for k in range(a, b):
         if W[k + 1]["s"] - W[k]["e"] > 0.25:
             segs.append((s, W[k]["e"] + PAD)); t_cut += segs[-1][1] - segs[-1][0]; s = W[k + 1]["s"] - PAD
-    segs.append((s, W[b]["e"] + PAD)); t_cut += segs[-1][1] - segs[-1][0]
+    segs.append((s, W[b]["e"] + EDGE_OUT)); t_cut += segs[-1][1] - segs[-1][0]
 json.dump(line_starts, open(lj, "w"))
 f = [f"[0:v]trim={a:.2f}:{b:.2f},setpts=PTS-STARTPTS[v{i}];[0:a]atrim={a:.2f}:{b:.2f},asetpts=PTS-STARTPTS[a{i}]" for i, (a, b) in enumerate(segs)]
 f.append("".join(f"[v{i}][a{i}]" for i in range(len(segs))) + f"concat=n={len(segs)}:v=1:a=1[vc][ac]")
