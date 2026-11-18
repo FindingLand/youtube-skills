@@ -37,11 +37,17 @@ export const Logo: React.FC<{src: string; size: number; style?: React.CSSPropert
   <Img src={staticFile("assets/" + src)} style={{width: size, height: size, objectFit: "contain", flexShrink: 0, ...style}} />
 );
 
-export const Card: React.FC<{children: React.ReactNode; dark?: boolean; title?: string; url?: string; top: number; h: number; d: number; fill?: number}> = ({children, dark, title, url, top, h, d, fill = 1}) => {
+// FULL shot (Peter, Nov 18 2026: "put a full view of the visual and don't show my face ... I've seen that on Nick videos"):
+// inside a FULL span the face card hides and every Card grows to most of the screen, its content zoomed to fill it.
+export const FullCtx = React.createContext(false);
+export const FULL_TOP = 170, FULL_H = 1100, FULL_ZOOM = 1.3, FULL_CAPTION_TOP = 1390;  // Nick FULL: card 9-66%, caption ~74%
+export const Card: React.FC<{children: React.ReactNode; dark?: boolean; title?: string; url?: string; top: number; h: number; d: number; fill?: number}> = ({children, dark, title, url, top: top0, h: h0, d, fill: fill0 = 1}) => {
+  const full = React.useContext(FullCtx);
+  const top = full ? FULL_TOP : top0, h = full ? FULL_H : h0, fill = full ? fill0 * FULL_ZOOM : fill0;
   const k = pop(d);
   const BAR = 56;
   return (
-    <div style={{position: "absolute", left: 60, right: 60, top, height: h, borderRadius: 26, background: dark ? "#1A1A1A" : "#fff",
+    <div style={{position: "absolute", left: full ? 30 : 60, right: full ? 30 : 60, top, height: h, borderRadius: 26, background: dark ? "#1A1A1A" : "#fff",
       border: `3px solid ${BORDER}`, boxShadow: `0 0 0 1px ${dark ? "#052756" : "#BCEDFF"} inset, 0 0 14px ${GLOW}, 0 0 40px ${GLOW}88${dark ? "" : `, inset 0 0 12px #BCEDFF`}`,
       overflow: "hidden", transform: `scale(${0.95 + 0.05 * k})`, opacity: k, filter: `blur(${(1 - k) * 10}px)`}}>
       <div style={{height: BAR, position: "relative", display: "flex", alignItems: "center", gap: 12, padding: "0 22px", background: dark ? "#1D1D1B" : "#F4F6F9", borderBottom: dark ? "1px solid #2A2A2A" : "1px solid #E1E5EA"}}>
@@ -117,6 +123,7 @@ export type ShortConfig = {
   anchors: [string, Scene][];         // [first words of the line where the scene starts, scene]; the first one starts at 0
   hookEnd: number;                    // hook title shows until anchors[hookEnd] starts
   hook: {brand: string; rest: string; box: string; brandColor?: string}; // line 1: brand word (gradient, or brandColor) + rest, line 2: blue italic box
+  full?: [string, number][];          // FULL shots: [phrase where it starts, seconds]; no face, big card (cover look-aways)
   faceSrcTop?: number;                // source y (of 1920) shown at the face card's top edge: ~60 px above the hair
 };
 
@@ -167,7 +174,7 @@ export const makeShort = (cfg: ShortConfig) => {
     const page = pages.find((p, i) => t >= p[0].s - 0.05 && t < (pages[i + 1]?.[0].s ?? 999));
     if (!page) return null;
     return (
-      <div style={{position: "absolute", top: 930, left: 40, right: 40, textAlign: "center", fontFamily: SANS, fontWeight: 700, fontSize: 84, letterSpacing: -1.5, lineHeight: 1.05}}>
+      <div style={{position: "absolute", top: isFull(t) ? FULL_CAPTION_TOP : 930, left: 40, right: 40, textAlign: "center", fontFamily: SANS, fontWeight: 700, fontSize: 84, letterSpacing: -1.5, lineHeight: 1.05}}>
         {page.map((w, i) => {
           const said = t >= w.s;
           const b = bare(w.w);
@@ -202,6 +209,8 @@ export const makeShort = (cfg: ShortConfig) => {
     cfg.anchors.forEach(([, el], i) => shots.push({from: starts[i], to: starts[i + 1] ?? DURATION, el}));
   }
   const HOOK_END = shots[cfg.hookEnd].from;
+  const fullSpans = (cfg.full ?? []).map(([ph, sec]) => { const a = at(ph); return [a, a + sec] as [number, number]; });
+  function isFull(t: number) { return fullSpans.some(([a, b]) => t >= a && t < b); }
 
   const HookTitle: React.FC = () => {
     const f = useCurrentFrame();
@@ -234,11 +243,12 @@ export const makeShort = (cfg: ShortConfig) => {
   const ShotWrap: React.FC<{el: Scene}> = ({el: El}) => <El d={useCurrentFrame()} />;
 
   const Short: React.FC = () => {
+    const full = isFull(useCurrentFrame() / FPS);
     const face = staticFile(`${cfg.slug}/face.mp4`);
     return (
       <AbsoluteFill style={{background: "radial-gradient(120% 80% at 20% 10%, #F3F4F1 0%, #E9F0F1 45%, #DFECF2 75%, #CEE2ED 100%)"}}>
         <Audio src={face} />
-        <div style={{position: "absolute", left: 46, right: 46, top: FACE_CARD_TOP, bottom: -60, borderRadius: 65, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,.18)"}}>
+        <div style={{position: "absolute", left: 46, right: 46, top: FACE_CARD_TOP, bottom: -60, borderRadius: 65, overflow: "hidden", opacity: full ? 0 : 1, boxShadow: "0 20px 60px rgba(0,0,0,.18)"}}>
           <Img src={staticFile(`${cfg.slug}/wall.jpg`)} style={{position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover"}} />
           <OffthreadVideo src={face} muted style={{position: "absolute", top: FACE_TOP, left: "50%", transform: "translateX(-50%)",
             height: FACE_H, width: FACE_H * 1080 / 1920, maxWidth: "none",
@@ -246,11 +256,13 @@ export const makeShort = (cfg: ShortConfig) => {
           WebkitMaskImage: FACE_H * 1080 / 1920 < CARD_W - 2 ? "linear-gradient(90deg, transparent 0, #000 60px, #000 calc(100% - 60px), transparent 100%)" : "none"}} />
         </div>
         <HookTitle />
+        <FullCtx.Provider value={full}>
         {shots.map((x) => (
           <Sequence key={x.from} from={s(x.from)} durationInFrames={s(x.to) - s(x.from)}>
             <ShotWrap el={x.el} />
           </Sequence>
         ))}
+        </FullCtx.Provider>
         <Captions />
       </AbsoluteFill>
     );

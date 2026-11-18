@@ -331,7 +331,9 @@ export const fiveplugins = makeShort({
   words: words as W[],
   // Whisper -> script spellings, from the Nov 18 2026 take; keys with a space are fixes in context (kit makeShort)
   fix: {cloud: "Claude", clod: "Claude", claud: "Claude", heading: "headache", na10: "n8n", n810: "n8n", playwrite: "Playwright", fields: "fills",
-    version: "versions", brainstorms: "brainstorms", creator: "Creator", "4": "Fourth", "context 7": "Context7", "300 ,000": "300,000", "5 cloud": "Five Claude", "5 skill": "Fifth Skill"},
+    version: "versions", brainstorms: "brainstorms", creator: "Creator", superpowers: "Superpowers", ip: "API", "4": "Fourth", four: "Fourth",
+    "context 7": "Context7", "context seven": "Context7", "play write": "Playwright", "300 ,000": "300,000", "5 cloud": "Five Claude",
+    "5 skill": "Fifth Skill", "fifth skill": "Fifth Skill", "links links": "Links"},
   key: ["headache", "right", "real", "current", "old", "stars", "tests", "once", "free"],
   noun: ["claude", "n8n", "playwright", "microsoft", "context7", "superpowers", "skill", "creator", "anthropic", "github"],
   anchors: [
@@ -340,6 +342,9 @@ export const fiveplugins = makeShort({
     ["fourth superpowers", S9Stars], ["claude brainstorms", S10Steps], ["fifth skill creator", S11SkillCreator], ["you describe a", S12Skill],
     ["building browsing", S13Recap], ["all five", S14End],
   ],
+  // FULL shots (no face) over the moments Peter glances off camera while speaking (Nov 18 2026 contact sheets), Nick-style
+  full: [["node by node", 1.4], ["fills in forms", 1.8], ["claude reads the", 1.6], ["superpowers with", 1.6], ["fifth skill creator", 1.4],
+    ["it writes a", 1.8], ["building browsing", 1.4], ["all five", 4]],
   hookEnd: 2,
   hook: {brand: "5 Claude", rest: "Plugins For", box: "Automation Builders", brandColor: "#D97757"},
   faceSrcTop: 655,  // Nov 18 take: hair top at source y 690-704 (2 frames), white wall, framed wide
