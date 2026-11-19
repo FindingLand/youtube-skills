@@ -130,6 +130,9 @@ def resaid(t0, t1, dropped):
     return sim(" ".join(heard[:len(dropped)]), " ".join(dropped)) >= 0.75
 
 attempts = [find_attempts(l) for l in lines]
+_dp = re.sub(r"\.txt$", "", sj) + ".dropped.txt"   # scripts/<slug>.dropped.txt: lines cut from the script, one per line
+dropped_attempts = sorted(i for l in (open(_dp, encoding="utf-8").read().splitlines() if os.path.exists(_dp) else []) if l.strip()
+                          for i in find_attempts([norm(x) for x in l.split() if norm(x)]))
 chosen, lo = [], 0
 for li, line in enumerate(lines):
     cand = [i for i in attempts[li] if i >= lo]
@@ -137,6 +140,13 @@ for li, line in enumerate(lines):
     nxt = [i for i in (attempts[li + 1] if li + 1 < len(lines) else []) if i > cand[0]]
     stop = nxt[0] if nxt else len(W)
     pick = max(i for i in cand if i < stop)
+    # Nov 19 2026 (five-plugins): a line DROPPED from the script is still in the recording. Its words leaked into the line before
+    # it (the recap "Building, browsing, docs..." ran on after "every time.": the loose word matches and the misheard-ending
+    # run-on both reached into it). Dropped lines go in scripts/<slug>.dropped.txt; each of their attempts is a hard stop.
+    dstop = [i for i in dropped_attempts if i > pick + HEAD]
+    if dstop and dstop[0] < stop:
+        print(f"  line {li+1}: stops before a dropped line at {W[dstop[0]]['s']:.2f}s (\"{' '.join(w['w'] for w in W[dstop[0]:dstop[0] + 3])}\")")
+        stop = dstop[0]
     # Nov 18 2026: "Third, Context 7" matched on "Context 7 Claude" (the dropped-first-word allowance) and "Third" was cut.
     # If the word just before the match IS the line's first word, spoken right before it, the take starts there.
     # Also when Whisper split a word the match keyed on ("Second, play write from Microsoft": the match landed on "write").

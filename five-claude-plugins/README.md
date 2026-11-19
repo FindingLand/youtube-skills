@@ -1,6 +1,6 @@
 # 5 Claude plugins every automation builder needs
 
-From my YouTube Short. All five are free to install, all open source (MIT or Apache-2.0). Stars and licenses checked Nov 17 2026.
+From my YouTube Short. All five are free to install, all open source (MIT or Apache-2.0). Stars and licenses checked Nov 19 2026.
 
 | # | Plugin | What it does | Install in Claude Code |
 |---|---|---|---|

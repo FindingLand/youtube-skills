@@ -40,8 +40,11 @@ def run(label, cmd, cwd=ROOT):
 # --name "04 Pull data from almost any website" = the file name on the Desktop (default: the slug).
 skip_cut, check_only = "--skip-cut" in sys.argv, "--check-only" in sys.argv
 name = sys.argv[sys.argv.index("--name") + 1] if "--name" in sys.argv else slug
+# --reuse-raw (Nov 19 2026, Short 03): a re-cut after dropping script lines reuses the raw words.json (saves ~45 s) and keeps
+# every stage at BelowNormal (running cut_takes.py by hand ran it at normal priority)
+reuse_raw = "--reuse-raw" in sys.argv and (work / "words.json").exists()
 if not skip_cut:
-    run("transcribe raw", ["py", str(ROOT / "transcribe.py"), str(raw), str(work / "words.json")], cwd=work)
+    if not reuse_raw: run("transcribe raw",["py", str(ROOT / "transcribe.py"), str(raw), str(work / "words.json")], cwd=work)
     run("pick last takes + cut", ["py", str(ROOT / "cut_takes.py"), str(raw), str(work / "words.json"), str(script), str(work / "face_cut.mp4"), str(work / "lines.json")])
     run("transcribe cut", ["py", str(ROOT / "transcribe.py"), str(work / "face_cut.mp4"), str(work / "words_cut.json")], cwd=work)
     # Nov 18 2026 (egm): the cut transcript next to the script, one row per line, OK/CHECK. Read every CHECK before building scenes
@@ -55,7 +58,9 @@ run("wall still", [FF, "-v", "error", "-y", "-ss", "1", "-i", str(pub / "face.mp
 # 07 also rendered 351 s of check frames of the PLACEHOLDER draft scenes (useless: the scenes are rebuilt on the cut words), and
 # its stale contact sheet was later read by mistake as the new one. Use --cut-only first, build scenes, then --skip-cut --check-only.
 if "--cut-only" in sys.argv:
-    run("look-away sheets", ["py", str(ROOT / "lookaway.py"), slug])
+    # --look-box x,y,w,h (Nov 19 2026, 03): the default box fits a CLOSE take; a wide take (hair top ~690) needs 170,640,740,520
+    lb = ["--box", sys.argv[sys.argv.index("--look-box") + 1]] if "--look-box" in sys.argv else []
+    run("look-away sheets", ["py", str(ROOT / "lookaway.py"), slug] + lb)
     print("CUT-ONLY: read the cut_report CHECK rows + D:/Shorts/<slug>/look/sheet_*.png, build scenes, then --skip-cut --check-only")
     [print(f"  {l:<22}{s:>5}s") for l, s in log]; sys.exit(0)
 # --no-frames (Nov 18 2026, Short 05): the final pass after the frames were checked; re-rendering all check frames cost ~6 min.
