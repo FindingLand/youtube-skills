@@ -16,3 +16,5 @@ For EACH frame check:
 7. Meaning: a red ✕ pill must be a negative point, a green ✓ a positive one (Nov 17: "the site's own API" was shown as a red ✕). Fictional examples use example.com domains and say EXAMPLE or sample; no real company's name, data or domain.
 
 Return: a one-line verdict PASS or FAIL, then the failing frames as "s_0NN: rule N: what exactly is wrong (rough y)". Keep it short; do not list passing frames.
+
+Nov 18 2026 (Short 05): when you also check presenter look-aways, a single frame with eyes closed mid-sentence is a BLINK, not a look-away; flag only eyes down/away from the lens or a hand over the face. A card at the first instant of a scene (empty, popping in) is a build-in, not an empty band.

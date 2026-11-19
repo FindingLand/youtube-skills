@@ -150,8 +150,13 @@ for li, line in enumerate(lines):
     while end + 1 < stop and W[end + 1]["s"] - W[end]["e"] < 0.35 and not re.search(r"[.!?]$", W[end]["w"]): end += 1
     # Nov 18 2026 (web-to-api, Peter removed "Two catches ... eleven cents" from the script): loose word matches ("bill" ~ "build")
     # kept that unscripted speech inside line 7. Once the whole line has been said, the take ends at the first 2 s+ pause.
+    tri_at = lambda j: tuple(norm(W[j + k]["w"]) for k in range(3) if j + k < len(W))
     for j in range(pick, end):
         if W[j + 1]["s"] - W[j]["e"] >= 2.0 and sim(" ".join(norm(w["w"]) for w in W[pick:j + 1] if norm(w["w"])), " ".join(line)) >= 0.85:
+            # Nov 18 2026 (ai-agency line 9): "...knows when to handle [5 s] questions and complaints and knows when to hand it to
+            # a human" is a mid-sentence RESTART, not the end of the take: when the 3 words after the pause were already said in
+            # this take, keep going and let drop_restarts() cut the earlier try. (Before this, the line ended on "handle".)
+            if tri_at(j + 1) in {tri_at(x) for x in range(pick, j - 1)}: continue
             end = j; break
     # Retakes of a sentence INSIDE the line: keep the line's start, jump to the LAST attempt of each later sentence.
     ranges, cur = [], pick

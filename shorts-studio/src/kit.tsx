@@ -158,13 +158,30 @@ export type ShortConfig = {
   noun?: string[];                    // brand / proper nouns in serif italic
   anchors: [string, Scene][];         // [first words of the line where the scene starts, scene]; the first one starts at 0
   hookEnd: number;                    // hook title shows until anchors[hookEnd] starts
-  hook: {brand: string; rest: string; box: string; brandColor?: string}; // line 1: brand word (gradient, or brandColor) + rest, line 2: blue italic box
+  hook: {brand: string; rest: string; box: string; brandColor?: string; size?: number}; // line 1: brand word (gradient, or brandColor) + rest (size px, default 86: ~20 chars fit), line 2: blue italic box
   full?: [string, number][];          // FULL shots: [phrase where it starts, seconds]; no face, big card (cover look-aways)
   faceSrcTop?: number;                // source y (of 1920) shown at the face card's top edge: ~60 px above the hair
 };
 
 const FACE_CARD_TOP = 1040;
 const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9']/g, "");
+
+// Highlight timing from the spoken words (Nov 18 2026, Short 05): 04 hand-tuned every mark's frame ("from: 68") by guessing
+// from words.json; cues() returns frames from the scene's start (its anchor) to a later phrase, so a mark lands ON the word
+// and a re-cut re-times it. Phrases use Whisper's spelling (words.json), like anchors. Use: const c = cues(words, "it's called");
+// marks={[{..., from: c("169"), to: c("169") + 8}]}
+export const cues = (words: W[], anchor: string) => {
+  const find = (phrase: string, after: number) => {
+    const p = phrase.split(" ").map(norm);
+    for (let i = 0; i < words.length; i++) {
+      if (words[i].s < after) continue;
+      if (p.every((q, j) => words[i + j] && norm(words[i + j].w) === q)) return words[i].s;
+    }
+    throw new Error(`cue not found in words.json: "${phrase}" (after ${after.toFixed(1)} s)`);
+  };
+  const a = find(anchor, 0) - 0.06;   // same start as makeShort's anchor
+  return (phrase: string) => Math.round((find(phrase, a) - a) * FPS);
+};
 
 export const makeShort = (cfg: ShortConfig) => {
   const FIX = cfg.fix ?? {};
@@ -256,7 +273,7 @@ export const makeShort = (cfg: ShortConfig) => {
     const sharp = interpolate(f, [16, 26], [8, 0], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
     return (
       <div style={{position: "absolute", top: 200, width: "100%", textAlign: "center", opacity: k}}>
-        <div style={{fontFamily: SANS, fontWeight: 800, fontSize: 86, color: INK, letterSpacing: -2}}>
+        <div style={{fontFamily: SANS, fontWeight: 800, fontSize: cfg.hook.size ?? 86, color: INK, letterSpacing: -2, whiteSpace: "nowrap"}}>
           <span style={cfg.hook.brandColor ? {color: cfg.hook.brandColor} : {background: BRAND_GRADIENT, WebkitBackgroundClip: "text", color: "transparent"}}>{cfg.hook.brand}</span> {cfg.hook.rest}
         </div>
         <div style={{display: "inline-block", marginTop: 14, padding: "4px 26px 14px", background: BLUE, borderRadius: 8, clipPath: `inset(0 ${wipe}% 0 0)`}}>

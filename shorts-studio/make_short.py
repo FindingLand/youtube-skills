@@ -48,16 +48,19 @@ pub = ROOT / "public" / slug; pub.mkdir(parents=True, exist_ok=True)
 shutil.copy(work / "face_cut.mp4", pub / "face.mp4"); shutil.copy(work / "words_cut.json", scenes.parent / "words.json")
 # side fill of the face card: a blurred still of the wall above his head (a still, not a 2nd video: that doubled render time)
 run("wall still", [FF, "-v", "error", "-y", "-ss", "1", "-i", str(pub / "face.mp4"), "-frames:v", "1", "-vf", "crop=1080:520:0:0,scale=1080:1920,boxblur=30:3", "-q:v", "3", str(pub / "wall.jpg")])
-frames = ROOT / "out" / f"frames_{slug}"; shutil.rmtree(frames, ignore_errors=True); frames.mkdir(parents=True)
-run("check frames", f"node frames.mjs {slug} out/frames_{slug}")
-run("empty-space check", ["py", "check_frames.py", "--frames-only", str(frames)])
-# contact sheet: every check frame on one image, read it first (whole-Short view in one look)
-from PIL import Image
-fs = sorted(frames.glob("s_*.png")); ims = [Image.open(f).resize((216, 384)) for f in fs]
-sheet = Image.new("RGB", (216 * 8, 384 * ((len(ims) + 7) // 8)), "white")
-for i, im in enumerate(ims): sheet.paste(im, ((i % 8) * 216, (i // 8) * 384))
-sheet.save(ROOT / "out" / f"sheet_{slug}.png"); print("contact sheet:", ROOT / "out" / f"sheet_{slug}.png")
-print("cut transcript:", " ".join(w["w"] for w in __import__("json").load(open(work / "words_cut.json"))))
+# --no-frames (Nov 18 2026, Short 05): the final pass after the frames were checked; re-rendering all check frames cost ~6 min.
+# Fixes inside the loop are spot-checked with `node frames.mjs <slug> out/<dir> 26,29` (a few frames, ~1 min).
+if "--no-frames" not in sys.argv:
+    frames = ROOT / "out" / f"frames_{slug}"; shutil.rmtree(frames, ignore_errors=True); frames.mkdir(parents=True)
+    run("check frames", f"node frames.mjs {slug} out/frames_{slug}")
+    run("empty-space check", ["py", "check_frames.py", "--frames-only", str(frames)])
+    # contact sheet: every check frame on one image, read it first (whole-Short view in one look)
+    from PIL import Image
+    fs = sorted(frames.glob("s_*.png")); ims = [Image.open(f).resize((216, 384)) for f in fs]
+    sheet = Image.new("RGB", (216 * 8, 384 * ((len(ims) + 7) // 8)), "white")
+    for i, im in enumerate(ims): sheet.paste(im, ((i % 8) * 216, (i // 8) * 384))
+    sheet.save(ROOT / "out" / f"sheet_{slug}.png"); print("contact sheet:", ROOT / "out" / f"sheet_{slug}.png")
+    print("cut transcript:", " ".join(w["w"] for w in __import__("json").load(open(work / "words_cut.json"))))
 if check_only:
     print("CHECK-ONLY: run the checker agent (checker_prompt.md) on", frames); [print(f"  {l:<22}{s:>5}s") for l, s in log]
     sys.exit(0)

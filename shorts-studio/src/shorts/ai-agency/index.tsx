@@ -1,295 +1,185 @@
-// AI Agency Short (Nov 17 2026): "283 free AI specialists inside Claude Code" (msitarzewski/agency-agents, MIT).
-// Scenes anchored to scripts/ai-agency.txt. Plan + verified facts: client-memories/finding-land-internal/youtube/shorts/05-ai-agency-in-claude-code/plan.md
-// Example outputs (Acme...) are illustrative content, clearly tagged EXAMPLE on screen; the install result line is a mock until a real run.
+// AI Agency Short v2 (Nov 18 2026): "283 free AI specialists, all within Claude Code" (msitarzewski/agency-agents, MIT).
+// Rebuilt to the Short 04 v3 standard (shorts-guide 3-ter): REAL GitHub screenshots (shoot.py, Playwright 2x, Nov 18 2026) panned
+// and highlighted ON the spoken word (kit cues() reads the times from words.json); FULL shots for the name + the install/how-to part;
+// on-screen text only repeats what is said; no drawn mocks, no EXAMPLE content, no music.
+// Facts re-verified Nov 18 2026 (GitHub API): 169,181 stars, 27,475 forks, MIT; plan: client-memories/.../05-ai-agency-in-claude-code/plan.md
 import React from "react";
 import {interpolate} from "remotion";
-import {Card, Mono, Pill, Sweep, Icon, Logo, Cursor, typed, pop, EndCard, makeShort, SANS, SERIF, MONO, BLUE, INK, OK, TOP, H, HOOK_TOP, HOOK_H, W} from "../../kit";
+import {Card, Shot, Chip, EndCard, makeShort, cues, SANS, INK, BAD, TOP, H, HOOK_TOP, HOOK_H, W} from "../../kit";
 import words from "./words.json";
 
-const FILE = "github.com/msitarzewski/agency-agents";
-const SALES = "#E8590C", PROPOSAL = "#2563EB", SUPPORT = "#0F9C8A";
-const count = (d: number, to: number, from = 0, len = 24) => Math.round(interpolate(d, [from, from + len], [0, to], {extrapolateLeft: "clamp", extrapolateRight: "clamp"}));
+const WS = words as W[];
+const REPO_URL = "github.com/msitarzewski/agency-agents";
+const TOPPNG = "ai-agency/msitarzewski_agency-agents_top.png";      // 1800x2200: header, folder list, About
+const FILES = "agency-agents/blob/main/";
+// folder rows in TOPPNG (image px): a box per spoken role
+const row = (cy: number) => ({x: 50, y: cy - 36, w: 430, h: 72});
+const DESIGN = row(900), ENGINEERING = row(982), FINANCE = row(1146), MARKETING = row(1555), SALES = row(1966);
 
-// Full-colour Fluent Flat icon in a white rounded square (Nick's logo tiles)
-const Tile: React.FC<{src: string; size: number; k?: number}> = ({src, size, k = 1}) => (
-  <div style={{width: size, height: size, borderRadius: size * 0.24, background: "#fff", boxShadow: "0 6px 22px rgba(0,0,0,.12)", display: "flex", alignItems: "center", justifyContent: "center",
-    flexShrink: 0, opacity: k, transform: `scale(${0.7 + 0.3 * k})`}}><Logo src={src} size={size * 0.66} /></div>
-);
-const Example: React.FC<{d: number; at: number; lines: string[]; step?: number; title: string}> = ({d, at, lines, step = 12, title}) => {
-  const k = pop(d, at);
-  return (
-    <div style={{marginTop: 26, borderRadius: 18, border: "2px dashed #B8C4D2", background: "#F6F8FB", padding: "20px 24px", opacity: k, transform: `translateY(${(1 - k) * 30}px)`}}>
-      <div style={{display: "flex", alignItems: "center", gap: 14}}>
-        <span style={{fontFamily: SANS, fontWeight: 800, fontSize: 24, letterSpacing: 2, color: "#fff", background: "#6B7480", borderRadius: 8, padding: "4px 12px"}}>EXAMPLE</span>
-        <span style={{fontFamily: SANS, fontWeight: 700, fontSize: 34, color: "#3B434C"}}>{title}</span>
-      </div>
-      {lines.map((l, i) => {
-        const q = pop(d, at + 6 + i * step);
-        return <div key={l} style={{marginTop: 12, fontFamily: SANS, fontWeight: 600, fontSize: 38, color: INK, lineHeight: 1.25, opacity: q, transform: `translateX(${(1 - q) * -24}px)`}}>{l}</div>;
-      })}
-    </div>
-  );
-};
-const AgentHead: React.FC<{d: number; icon: string; name: string; division: string; color: string; role: React.ReactNode}> = ({d, icon, name, division, color, role}) => (
-  <div style={{fontFamily: SANS}}>
-    <div style={{display: "flex", alignItems: "center", gap: 24}}>
-      <Tile src={icon} size={120} k={pop(d, 2)} />
-      <div>
-        <div style={{fontSize: 28, fontWeight: 700, color, letterSpacing: 2}}>{division}</div>
-        <div style={{fontSize: 60, fontWeight: 800, color: INK, letterSpacing: -1.5, lineHeight: 1.05}}>{name}</div>
-      </div>
-    </div>
-    <div style={{marginTop: 22, fontSize: 42, fontWeight: 500, lineHeight: 1.35, color: INK}}>{role}</div>
-  </div>
+// 1 (hook, under the title) "283 free AI specialists, all within Claude Code": the real folder list, slow pan
+const S1Hook: React.FC<{d: number}> = ({d}) => (
+  <Card top={HOOK_TOP} h={HOOK_H} d={d} url={REPO_URL}>
+    <Shot d={d} src={TOPPNG} iw={1800} ih={2200} boxH={316}
+      keys={[{at: 0, cx: 580, cy: 950, w: 1150}, {at: 180, cx: 580, cy: 1450, w: 1150}]} />
+  </Card>
 );
 
-// 1 "283 free AI specialists, all inside Claude Code" (hook zone, under the hook title)
-const S1Count: React.FC<{d: number}> = ({d}) => {
-  const n = count(d, 283, 0, 26);
-  const k = pop(d, 26);
-  return (
-    <Card top={HOOK_TOP} h={HOOK_H} d={d} title="Claude Code · ~/.claude/agents">
-      <div style={{display: "flex", alignItems: "center", gap: 34, fontFamily: SANS}}>
-        <div style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 230, color: BLUE, lineHeight: 0.95, width: 400, textAlign: "center",
-          transform: `scale(${1 + 0.06 * (1 - k)})`}}>{n}</div>
-        <div>
-          <div style={{fontSize: 58, fontWeight: 800, color: INK, letterSpacing: -1.5, lineHeight: 1.08}}>free AI<br />specialists</div>
-          <div style={{marginTop: 20, display: "flex", alignItems: "center", gap: 14, opacity: pop(d, 40), fontSize: 40, fontWeight: 700, color: "#3B434C"}}>
-            <Logo src="claude-icon.svg" size={54} />inside <span style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, color: INK}}>Claude Code</span>
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-// 2 "It's called Agency Agents, and it has almost 169 thousand stars on GitHub" (GitHub shows "169k")
+// 2 FULL "It's called Agency Agents, and it has almost 169 thousand stars on GitHub": the name, then the Star button on "169"
 const S2Repo: React.FC<{d: number}> = ({d}) => {
-  const stars = count(d, 169, 14, 30);
+  const c = cues(WS, "it's called");
+  const n = c("agentsy agents"), k = c("169");
   return (
-    <Card top={HOOK_TOP} h={HOOK_H} d={d} fill={1.12} url={FILE}>
-      <div style={{fontFamily: SANS}}>
-        <div style={{display: "flex", alignItems: "center", gap: 18}}>
-          <Logo src="github-icon.svg" size={56} />
-          <div style={{fontSize: 44, color: "#1F2328"}}><span style={{color: "#0969DA"}}>msitarzewski</span> / <b style={{color: "#0969DA"}}>agency-agents</b></div>
-        </div>
-        <div style={{marginTop: 16, fontSize: 34, color: "#3B434C", fontWeight: 500}}><Sweep d={d} from={4} to={18}>A complete AI agency at your fingertips</Sweep></div>
-        <div style={{marginTop: 20, display: "flex", flexWrap: "wrap", gap: 14, fontSize: 34, fontWeight: 700, color: "#1F2328"}}>
-          <span style={{padding: "8px 18px", border: `3px solid ${BLUE}`, borderRadius: 10, background: "#E7F1FF", color: "#0B3D91", opacity: pop(d, 10)}}>★ {stars}k stars</span>
-          {["MIT", "283 agents"].map((x, i) => (
-            <span key={x} style={{padding: "8px 18px", border: "2px solid #D1D9E0", borderRadius: 10, opacity: pop(d, 46 + i * 10)}}>{x}</span>
-          ))}
+    <Card top={TOP} h={H} d={d} url={REPO_URL}>
+      <Shot d={d} src={TOPPNG} iw={1800} ih={2200}
+        keys={[{at: 0, cx: 560, cy: 560, w: 1050}, {at: n - 4, cx: 420, cy: 470, w: 800}, {at: k - 14, cx: 420, cy: 470, w: 800}, {at: k, cx: 1400, cy: 500, w: 760}]}
+        marks={[{x: 88, y: 342, w: 290, h: 62, from: n, to: n + 14}, {x: 1556, y: 336, w: 220, h: 72, from: k, to: k + 8, box: true}]} />
+    </Card>
+  );
+};
+
+// 3 "Each agent has one job": the repo's own About line, then the spoken words as a chip
+const S3One: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "each agent");
+  return (
+    <Card top={TOP} h={H} d={d} url={REPO_URL}>
+      <Shot d={d} src={TOPPNG} iw={1800} ih={2200} boxH={400}
+        keys={[{at: 0, cx: 1480, cy: 690, w: 640}]}
+        marks={[{x: 1530, y: 736, w: 222, h: 50, from: 2, to: 14}, {x: 1298, y: 784, w: 263, h: 50, from: 14, to: c("one")}]} />
+      <div style={{display: "flex", justifyContent: "center", marginTop: 34}}><Chip d={d} at={c("one")} text="One job" /></div>
+    </Card>
+  );
+};
+
+// 4 "Engineers, designers, marketers, sales reps, even a bookkeeper": a box on each folder as it is said (bookkeeper = finance)
+const S4Roles: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "engineers");
+  const m = c("marketers"), b = c("bookkeeper");
+  const mk = (r: {x: number; y: number; w: number; h: number}, at: number) => ({...r, from: at, to: at + 8, box: true});
+  return (
+    <Card top={TOP} h={H} d={d} url={REPO_URL}>
+      <Shot d={d} src={TOPPNG} iw={1800} ih={2200}
+        keys={[{at: 0, cx: 560, cy: 1000, w: 1000}, {at: m - 14, cx: 560, cy: 1000, w: 1000}, {at: m - 2, cx: 560, cy: 1680, w: 1000},
+          {at: b - 14, cx: 560, cy: 1680, w: 1000}, {at: b - 2, cx: 560, cy: 1100, w: 1000}]}
+        marks={[mk(ENGINEERING, 0), mk(DESIGN, c("designers")), mk(MARKETING, m), mk(SALES, c("sales")), mk(FINANCE, b)]} />
+    </Card>
+  );
+};
+
+// 5 FULL "You install them once, and you can ask Claude for any of them by name": the README's Claude Code install block
+const S5Install: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "you install");
+  const a = c("ask");
+  return (
+    <Card top={TOP} h={H} d={d} url={REPO_URL}>
+      <Shot d={d} src="ai-agency/agency-agents_readme_install.png" iw={1800} ih={1400}
+        keys={[{at: 0, cx: 520, cy: 560, w: 820}, {at: a - 10, cx: 520, cy: 560, w: 820}, {at: a + 2, cx: 640, cy: 640, w: 1060}]}
+        marks={[{x: 120, y: 512, w: 604, h: 46, from: c("install"), to: c("once") + 6},
+          {x: 120, y: 710, w: 830, h: 44, from: a, to: c("any")},
+          {x: 120, y: 750, w: 720, h: 44, from: c("any"), to: c("by name")},
+          {x: 482, y: 746, w: 276, h: 50, from: c("by name"), to: c("by name") + 8, box: true}]} />
+    </Card>
+  );
+};
+
+// 6 "Here are the three a small business would actually use": the spoken words, big
+const S6Three: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "here are");
+  return (
+    <Card top={TOP} h={H} d={d} title="Agency Agents">
+      <div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: 50, paddingTop: 170}}>
+        {/* "Here are the three": the chip lands on "Here" (the card must not sit blank ~2 s until "three") */}
+        <Chip d={d} at={2} text="The three" size={130} />
+        <div style={{whiteSpace: "nowrap"}}><Chip d={d} at={c("small business")} text="Small business" size={84} /></div>
+      </div>
+    </Card>
+  );
+};
+
+// 7 "The Outbound Strategist picks who to target and your cold email sequence": the real agent file, name -> ICP -> cold emails
+const OUT = "ai-agency/agency-agents_outbound-strategist.png";   // 1800x7200, page from 300 css px
+const S7Outbound: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "the outbound");
+  const p = c("picks"), e = c("call email");
+  return (
+    <Card top={TOP} h={H} d={d} url={FILES + "sales/sales-outbound-strategist.md"}>
+      <Shot d={d} src={OUT} iw={1800} ih={7200}
+        keys={[{at: 0, cx: 740, cy: 330, w: 900}, {at: p - 14, cx: 740, cy: 330, w: 900}, {at: p - 2, cx: 540, cy: 3250, w: 1000},
+          {at: e - 14, cx: 540, cy: 3250, w: 1000}, {at: e - 2, cx: 540, cy: 6900, w: 1000}]}
+        marks={[{x: 335, y: 164, w: 300, h: 54, from: 2, to: 16}, {x: 92, y: 3104, w: 766, h: 72, from: p, to: p + 8, box: true},
+          {x: 92, y: 6847, w: 675, h: 62, from: e, to: e + 8, box: true}]} />
+    </Card>
+  );
+};
+
+// 8 "The Proposal Strategist turns a sales call into a written proposal": name, "transforms ... sales opportunities", "proposals"
+const S8Proposal: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "the proposal");
+  const t = c("turns"), w = c("written proposal");
+  return (
+    <Card top={TOP} h={H} d={d} url={FILES + "sales/sales-proposal-strategist.md"}>
+      <Shot d={d} src="ai-agency/agency-agents_proposal-strategist.png" iw={1800} ih={3000}
+        keys={[{at: 0, cx: 760, cy: 820, w: 900}, {at: t - 12, cx: 760, cy: 820, w: 900}, {at: t, cx: 1230, cy: 830, w: 900},
+          {at: w - 12, cx: 1230, cy: 830, w: 900}, {at: w, cx: 760, cy: 860, w: 900}]}
+        marks={[{x: 330, y: 724, w: 290, h: 54, from: 2, to: 16}, {x: 800, y: 798, w: 863, h: 50, from: t, to: c("sales call") + 10},
+          {x: 336, y: 846, w: 149, h: 50, from: c("sales call") + 10, to: c("into")}, {x: 602, y: 894, w: 353, h: 50, from: w, to: w + 8, box: true}]} />
+    </Card>
+  );
+};
+
+// 9 "And the Customer Service agent handles questions and complaints, and knows when to hand it to a human"
+const S9Support: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "and the customer");
+  const q = c("questions"), k = c("complaints"), h = c("hand it");
+  return (
+    <Card top={TOP} h={H} d={d} url={FILES + "specialized/customer-service.md"}>
+      <Shot d={d} src="ai-agency/agency-agents_customer-service.png" iw={1800} ih={3000}
+        keys={[{at: 0, cx: 760, cy: 850, w: 900}, {at: q - 12, cx: 760, cy: 850, w: 900}, {at: q, cx: 1230, cy: 900, w: 900},
+          {at: k - 8, cx: 1230, cy: 900, w: 900}, {at: k + 4, cx: 760, cy: 940, w: 900}]}
+        marks={[{x: 330, y: 724, w: 270, h: 54, from: 2, to: 16}, {x: 1296, y: 872, w: 271, h: 50, from: q, to: q + 14},
+          {x: 336, y: 920, w: 166, h: 50, from: k, to: k + 10}, {x: 902, y: 920, w: 287, h: 50, from: h, to: h + 8, box: true},
+          {x: 524, y: 1164, w: 200, h: 50, from: c("human"), to: c("human") + 12}]} />
+    </Card>
+  );
+};
+
+// 10 "That's prospecting, closing, and support, without three new hires": each word lands, then the hires are struck out
+const S10Recap: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "that's prospecting");
+  const strike = interpolate(d, [c("hires"), c("hires") + 10], [0, 100], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
+  return (
+    <Card top={TOP} h={H} d={d} title="Agency Agents">
+      <div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: 18}}>
+        <Chip d={d} at={c("prospecting")} text="Prospecting" size={72} />
+        <Chip d={d} at={c("closing")} text="Closing" size={72} />
+        <Chip d={d} at={c("support")} text="Support" size={72} />
+        <div style={{position: "relative", marginTop: 4, fontFamily: SANS, fontWeight: 800, fontSize: 64, color: INK, letterSpacing: -1.5, opacity: d >= c("three") ? 1 : 0}}>
+          Three new hires
+          <div style={{position: "absolute", left: 0, top: "52%", height: 9, width: `${strike}%`, background: BAD, borderRadius: 4}} />
         </div>
       </div>
     </Card>
   );
 };
 
-// 3 "Each agent has one job": 18 divisions, real counts (plan.md, counted Nov 17 2026)
-const DIVS: [string, number][] = [["Engineering", 66], ["Specialized", 59], ["Marketing", 37], ["Game Dev", 21], ["GIS", 13], ["Security", 12], ["Design", 10], ["Sales", 9], ["Testing", 9],
-  ["Paid Media", 7], ["Project Mgmt", 7], ["Academic", 6], ["Product", 6], ["Spatial", 6], ["Support", 6], ["Finance", 5], ["Healthcare", 3], ["Research", 1]];
-const S3Divisions: React.FC<{d: number}> = ({d}) => (
-  <Card top={TOP} h={H} d={d} url={FILE}>
-    <div style={{fontFamily: SANS}}>
-      <div style={{display: "flex", alignItems: "baseline", gap: 18}}>
-        <span style={{fontSize: 64, fontWeight: 800, color: INK, letterSpacing: -1.5}}>18 divisions</span>
-        <span style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 56, color: BLUE}}>1 agent, 1 job</span>
-      </div>
-      <div style={{marginTop: 22, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14}}>
-        {DIVS.map(([n, c], i) => {
-          const k = pop(d, 3 + i * 1.6);
-          const hot = n === "Sales" || n === "Support" || n === "Finance";
-          return (
-            <div key={n} style={{height: 70, borderRadius: 14, background: hot ? "#E7F1FF" : "#F4F6F9", border: `2px solid ${hot ? BLUE : "#D1D9E0"}`, display: "flex", alignItems: "center",
-              justifyContent: "space-between", padding: "0 16px", opacity: k, transform: `scale(${0.8 + 0.2 * k})`}}>
-              <span style={{fontSize: 29, fontWeight: 700, color: INK}}>{n}</span>
-              <span style={{fontSize: 30, fontWeight: 800, color: BLUE}}>{c}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  </Card>
-);
-
-// 4 "Engineers, designers, marketers, sales reps, even a bookkeeper." one row pops per spoken word
-const ROLES: [string, string, string, number][] = [["laptop_flat.svg", "Engineers", "66 agents", 0], ["artist_palette_flat.svg", "Designers", "10 agents", 15],
-  ["megaphone_flat.svg", "Marketers", "37 agents", 30], ["chart_increasing_flat.svg", "Sales reps", "9 agents", 45], ["ledger_flat.svg", "Bookkeeper", "& Controller", 66]];
-const S4Roles: React.FC<{d: number}> = ({d}) => (
-  <Card top={TOP} h={H} d={d} url={FILE}>
-    <div style={{fontFamily: SANS, display: "flex", flexDirection: "column", gap: 14}}>
-      {ROLES.map(([src, t, sub, at]) => {
-        const k = pop(d, at);
-        return (
-          <div key={t} style={{display: "flex", alignItems: "center", gap: 28, height: 104, opacity: k, transform: `translateX(${(1 - k) * -40}px)`}}>
-            <Tile src={src} size={100} k={k} />
-            <span style={{fontSize: 64, fontWeight: 800, color: INK, letterSpacing: -1.5}}>{t}</span>
-            <span style={{marginLeft: "auto", fontSize: 34, fontWeight: 600, color: t === "Bookkeeper" ? BLUE : "#59636E"}}>{sub}</span>
-          </div>
-        );
-      })}
-    </div>
-  </Card>
-);
-
-// 5 + 6 "You install them once, and you can ask Claude for any of them by name." one terminal, two states
-const Terminal: React.FC<{d: number; ask?: boolean}> = ({d, ask}) => {
-  const cmd = "./scripts/install.sh\n  --tool claude-code";
-  const prompt = "Use the Proposal Strategist on my call notes";
-  const done = ask || d > 30;
-  return (
-    <Card dark top={TOP} h={H} d={d} title="Terminal · agency-agents">
-      <div style={{display: "flex", alignItems: "center", gap: 14, marginBottom: 10}}><Logo src="claude-icon.svg" size={44} /><Mono c="#8A8A8A" size={32}>Claude Code · ~/agency-agents</Mono></div>
-      <Mono c={ask ? "#8A8A8A" : "#fff"} size={46}>{"$ " + (ask ? cmd : typed(cmd, d, 0, 75))}{!done && <Cursor d={d} />}</Mono>
-      {done && <Mono c="#5BD68A" size={40}>{"✓ 283 agents copied to\n  ~/.claude/agents/"}</Mono>}
-      {ask && (
-        <div style={{marginTop: 22}}>
-          <Mono c="#fff" size={46}>{"> " + typed(prompt, d, 2, 40)}{d < 40 && <Cursor d={d} />}</Mono>
-          {d > 44 && <div style={{display: "flex", alignItems: "center", gap: 14, marginTop: 10}}><Icon src="memo_flat.svg" color="#7AB8FF" size={44} /><Mono c="#7AB8FF" size={40}>Proposal Strategist</Mono></div>}
-          {d > 56 && <Mono c="#FFD479" size={36}>{"  ● Read(call-notes.txt)"}</Mono>}
-          {d > 66 && <Mono c="#FFD479" size={36}>{"  ● Write(proposal.md)"}</Mono>}
-        </div>
-      )}
-    </Card>
-  );
-};
-const S5Install: React.FC<{d: number}> = ({d}) => <Terminal d={d} />;
-const S6Ask: React.FC<{d: number}> = ({d}) => <Terminal d={d} ask />;
-
-// 7 "Here are the three a small business would actually use."
-const PICKS: [string, string, string, string][] = [["bullseye_flat.svg", "Outbound Strategist", "Sales", SALES], ["memo_flat.svg", "Proposal Strategist", "Sales", PROPOSAL],
-  ["headphone_flat.svg", "Customer Service", "Support", SUPPORT]];
-const S7Three: React.FC<{d: number}> = ({d}) => {
-  const k = pop(d, 0);
-  return (
-    <Card top={TOP} h={H} d={d} title="For a small business">
-      <div style={{fontFamily: SANS}}>
-        <div style={{display: "flex", alignItems: "center", gap: 22, opacity: k, marginTop: -16}}>
-          <span style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 170, color: BLUE, lineHeight: 0.95}}>3</span>
-          <span style={{fontSize: 70, fontWeight: 800, color: INK, letterSpacing: -1.5}}>of <span style={{color: "#9A9E9F", textDecoration: d > 20 ? "line-through" : "none"}}>283</span></span>
-        </div>
-        <div style={{marginTop: 18, display: "flex", flexDirection: "column", gap: 18}}>
-          {PICKS.map(([src, n, div, c], i) => {
-            const q = pop(d, 14 + i * 12);
-            return (
-              <div key={n} style={{display: "flex", alignItems: "center", gap: 24, padding: "22px 20px", borderRadius: 18, background: "#F6F8FB", border: `3px solid ${c}`, opacity: q, transform: `scale(${0.9 + 0.1 * q})`}}>
-                <Tile src={src} size={84} />
-                <span style={{fontSize: 50, fontWeight: 800, color: INK, letterSpacing: -1}}>{n}</span>
-                <span style={{marginLeft: "auto", fontSize: 30, fontWeight: 700, color: c}}>{div}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-// 8 "The Outbound Strategist picks who to target and plans your cold email sequence."
-const S8Outbound: React.FC<{d: number}> = ({d}) => (
-  <Card top={TOP} h={H} d={d} fill={1.03} url="agency-agents/sales/sales-outbound-strategist.md">
-    <AgentHead d={d} icon="bullseye_flat.svg" name="Outbound Strategist" division="SALES" color={SALES}
-      role={<><Sweep d={d} from={8} to={22}>Picks who to target.</Sweep> <Sweep d={d} from={24} to={40}>Plans the cold email sequence.</Sweep></>} />
-    <Example d={d} at={8} title="Sequence for Acme Roofing" lines={["Target: roofers, 5 to 50 staff", "Day 1 email · Day 3 call · Day 7 email", "Subject: more jobs this storm season?"]} />
-  </Card>
-);
-
-// 9 "The Proposal Strategist turns a sales call into a written proposal."
-const S9Proposal: React.FC<{d: number}> = ({d}) => (
-  <Card top={TOP} h={H} d={d} fill={1.1} url="agency-agents/sales/sales-proposal-strategist.md">
-    <AgentHead d={d} icon="memo_flat.svg" name="Proposal Strategist" division="SALES" color={PROPOSAL}
-      role={<span style={{display: "flex", alignItems: "center", gap: 16}}>
-        <span style={{fontFamily: MONO, fontSize: 36, padding: "6px 14px", borderRadius: 10, background: "#F4F6F9", border: "2px solid #D1D9E0", opacity: pop(d, 6)}}>call-notes.txt</span>
-        <span style={{fontWeight: 800, color: PROPOSAL, opacity: pop(d, 14)}}>→</span>
-        <span style={{fontFamily: MONO, fontSize: 36, padding: "6px 14px", borderRadius: 10, background: "#E7F1FF", border: `2px solid ${PROPOSAL}`, opacity: pop(d, 22)}}>proposal.md</span>
-      </span>} />
-    <Example d={d} at={30} title="Proposal for Acme Dental" lines={["Problem: 40 missed calls a week", "Plan: AI books calls, live in 30 days", "Investment: $2,400 one time"]} />
-  </Card>
-);
-
-// 10 + 11 "And the Customer Service agent handles questions and complaints, and knows when to pass it to a human."
-const Bubble: React.FC<{d: number; at: number; me?: boolean; text: string}> = ({d, at, me, text}) => {
-  const k = pop(d, at);
-  return (
-    <div style={{display: "flex", justifyContent: me ? "flex-end" : "flex-start", marginTop: 14, opacity: k, transform: `translateY(${(1 - k) * 24}px)`}}>
-      <div style={{maxWidth: 650, padding: "14px 22px", borderRadius: 24, fontFamily: SANS, fontWeight: 600, fontSize: 38, lineHeight: 1.25,
-        background: me ? SUPPORT : "#EEF1F4", color: me ? "#fff" : INK}}>{text}</div>
-    </div>
-  );
-};
-const Support: React.FC<{d: number; human?: boolean}> = ({d, human}) => (
-  <Card top={TOP} h={H} d={d} fill={human ? 1.08 : 1.2} url="agency-agents/specialized/customer-service.md">
-    <div style={{display: "flex", alignItems: "center", gap: 20, fontFamily: SANS}}>
-      <Tile src="headphone_flat.svg" size={84} />
-      <div>
-        <div style={{fontSize: 50, fontWeight: 800, color: INK, letterSpacing: -1}}>Customer Service</div>
-        <div style={{fontSize: 26, fontWeight: 800, letterSpacing: 2, color: "#fff", background: "#6B7480", borderRadius: 8, padding: "2px 10px", display: "inline-block"}}>EXAMPLE CHAT</div>
-      </div>
-    </div>
-    {human ? <>
-      <Bubble d={99} at={0} text="Where is my order #1042?" />
-      <Bubble d={d} at={2} text="Third time it's late. I want a manager." />
-      <Bubble d={d} at={26} me text="I'm passing you to Sam, our team lead." />
-      <div style={{textAlign: "center"}}><Pill ok text="Handed to a human" d={d} at={40} /></div>
-    </> : <>
-      <Bubble d={d} at={4} text="Where is my order #1042?" />
-      <Bubble d={d} at={30} me text="It ships today. Tracking is in your email." />
-      <div style={{display: "flex", gap: 14, marginTop: 6}}>
-        {["Questions", "Complaints"].map((x, i) => (
-          <span key={x} style={{marginTop: 14, padding: "8px 20px", borderRadius: 12, border: `3px solid ${SUPPORT}`, color: SUPPORT, background: "#E6F6F3", fontFamily: SANS, fontWeight: 700, fontSize: 36, opacity: pop(d, 50 + i * 14)}}>{x}</span>
-        ))}
-      </div>
-    </>}
-  </Card>
-);
-const S10Support: React.FC<{d: number}> = ({d}) => <Support d={d} />;
-const S11Human: React.FC<{d: number}> = ({d}) => <Support d={d} human />;
-
-// 12 "That's prospecting, closing, and support, without three new hires."
-const JOBS: [string, string, string, number][] = [["bullseye_flat.svg", "Prospecting", "Outbound Strategist", 0], ["memo_flat.svg", "Closing", "Proposal Strategist", 30],
-  ["headphone_flat.svg", "Support", "Customer Service", 45]];
-const S12Recap: React.FC<{d: number}> = ({d}) => {
-  const cross = interpolate(d, [70, 82], [0, 100], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
-  return (
-    <Card top={TOP} h={H} d={d} title="Your new team">
-      <div style={{fontFamily: SANS}}>
-        {JOBS.map(([src, t, who, at]) => {
-          const k = pop(d, at);
-          return (
-            <div key={t} style={{display: "flex", alignItems: "center", gap: 24, height: 146, opacity: k, transform: `translateX(${(1 - k) * -40}px)`}}>
-              <Tile src={src} size={96} k={k} />
-              <div>
-                <div style={{fontSize: 62, fontWeight: 800, color: INK, letterSpacing: -1.5, lineHeight: 1}}>{t}</div>
-                <div style={{fontSize: 30, fontWeight: 600, color: "#59636E", marginTop: 6}}>{who}</div>
-              </div>
-              <span style={{marginLeft: "auto", fontSize: 64, fontWeight: 900, color: OK}}>✓</span>
-            </div>
-          );
-        })}
-        <div style={{marginTop: 34, display: "flex", alignItems: "center", gap: 22, opacity: pop(d, 62)}}>
-          <span style={{position: "relative", fontSize: 54, fontWeight: 800, color: "#59636E"}}>3 new hires
-            <span style={{position: "absolute", left: 0, top: "52%", height: 7, width: `${cross}%`, background: "#E5534B", borderRadius: 4}} /></span>
-          <span style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 62, color: BLUE, opacity: pop(d, 80)}}>0 new salaries</span>
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-const S13End: React.FC<{d: number}> = ({d}) => <EndCard d={d} />;
+// 11 "And it's free. Link's in the description."
+const S11End: React.FC<{d: number}> = ({d}) => <EndCard d={d} />;
 
 export const aiagency = makeShort({
   slug: "ai-agency",
-  words: words as W[],
-  fix: {cloud: "Claude", claud: "Claude", agencies: "Agency", "169,000": "169 thousand", "169 ,000": "169 thousand", links: "Link's", naming: "name", rep: "reps", "call email": "cold email"},
+  words: WS,
+  // from the CUT transcript (shorts-guide 3e): "Agentsy", "169 ,000", "call email" (he said "cold"), "Cloud"
+  fix: {cloud: "Claude", agentsy: "Agency", "169 ,000": "169 thousand", rep: "reps", "call email": "cold email", links: "Link's"},
   key: ["free", "169", "one", "once", "name", "three", "target", "proposal", "human", "prospecting", "closing", "support", "hires"],
   noun: ["claude", "agency", "agents", "github", "outbound", "strategist", "customer", "service"],
   anchors: [
-    ["283 free", S1Count], ["it's called", S2Repo], ["each agent", S3Divisions], ["engineers designers", S4Roles], ["you install", S5Install],
-    ["and you can", S6Ask], ["here are", S7Three], ["the outbound", S8Outbound], ["the proposal", S9Proposal], ["and the customer", S10Support],
-    ["and knows", S11Human], ["that's prospecting", S12Recap], ["and it's free", S13End],
+    ["283 free", S1Hook], ["it's called", S2Repo], ["each agent", S3One], ["engineers", S4Roles], ["you install", S5Install],
+    ["here are", S6Three], ["the outbound", S7Outbound], ["the proposal", S8Proposal], ["and the customer", S9Support],
+    ["that's prospecting", S10Recap], ["and it's free", S11End],
   ],
-  hookEnd: 2,
-  hook: {brand: "Claude Code", rest: "Just Got", box: "283 Free Specialists", brandColor: "#D97757"},
+  // FULL (no face): the name + stars on the real repo page, the how-to (install + ask by name), and "Here are the three"
+  // (covers a hand-to-face moment in the take at ~26-27 s of the cut)
+  full: [["it's called", 7.4], ["you install", 3.9], ["here are", 4.4]],
+  hookEnd: 1,
+  hook: {brand: "283 Free", rest: "AI Specialists", box: "Within Claude Code", brandColor: "#0085FF", size: 76},
   faceSrcTop: 625,
 });
