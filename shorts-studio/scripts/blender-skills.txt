@@ -7,5 +7,4 @@ Then you just describe what you want. Say, a low poly sci-fi rifle for a game.
 A director skill reads your request and picks the right skills, in order.
 Model, then UVs, then materials, then export. Claude does the work inside Blender.
 You can even attach a photo, and it builds a match.
-One catch: you still need Blender installed, and a paid Claude plan.
 But the skills are open source and free. Link's in the description.

@@ -158,7 +158,9 @@ export type ShortConfig = {
   noun?: string[];                    // brand / proper nouns in serif italic
   anchors: [string, Scene][];         // [first words of the line where the scene starts, scene]; the first one starts at 0
   hookEnd: number;                    // hook title shows until anchors[hookEnd] starts
-  hook: {brand: string; rest: string; box: string; brandColor?: string; size?: number}; // line 1: brand word (gradient, or brandColor) + rest (size px, default 86: ~20 chars fit), line 2: blue italic box
+  // line 1: brand word (gradient, or brandColor) + rest (size px, default 86: ~20 chars fit), line 2: blue italic box
+  // (boxSize px, default 100: ~17 chars fit; 06 "3D Models In Blender" = 20 chars ran edge to edge at 100, Nov 18 2026)
+  hook: {brand: string; rest: string; box: string; brandColor?: string; size?: number; boxSize?: number};
   full?: [string, number][];          // FULL shots: [phrase where it starts, seconds]; no face, big card (cover look-aways)
   faceSrcTop?: number;                // source y (of 1920) shown at the face card's top edge: ~60 px above the hair
   // "zoom" = bottom-aligned zoom-out with the blurred wall at the sides, for a CLOSE take (Nov 17 egm: chin at source y ~1640,
@@ -280,7 +282,7 @@ export const makeShort = (cfg: ShortConfig) => {
           <span style={cfg.hook.brandColor ? {color: cfg.hook.brandColor} : {background: BRAND_GRADIENT, WebkitBackgroundClip: "text", color: "transparent"}}>{cfg.hook.brand}</span> {cfg.hook.rest}
         </div>
         <div style={{display: "inline-block", marginTop: 14, padding: "4px 26px 14px", background: BLUE, borderRadius: 8, clipPath: `inset(0 ${wipe}% 0 0)`}}>
-          <span style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 100, color: "#fff", filter: `blur(${sharp}px)`}}>{cfg.hook.box}</span>
+          <span style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: cfg.hook.boxSize ?? 100, color: "#fff", filter: `blur(${sharp}px)`}}>{cfg.hook.box}</span>
         </div>
       </div>
     );

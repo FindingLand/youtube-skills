@@ -14,6 +14,10 @@ ap.add_argument("url"); ap.add_argument("name")
 ap.add_argument("--top", type=float, default=0); ap.add_argument("--height", type=float, default=1100)
 ap.add_argument("--full", action="store_true"); ap.add_argument("--find", nargs="*", default=[])
 ap.add_argument("--slug"); ap.add_argument("--wait", type=int, default=2500)
+# --css (Nov 18 2026, Short 06): CSS injected before the shot. GitHub code blocks scroll sideways, so the end of a long line
+# (the README's "-> export-pipeline") is cut off in the PNG while --find still returns its hidden box. Use
+# --css "pre{white-space:pre-wrap!important;word-break:break-word}" to wrap code lines so every word is on the image.
+ap.add_argument("--css")
 a = ap.parse_args()
 LIB = pathlib.Path.home() / "Desktop" / "Shorts image library" / ("repos" if "github.com" in a.url else "sites")
 LIB.mkdir(parents=True, exist_ok=True)
@@ -40,6 +44,7 @@ with sync_playwright() as p:
     br = p.chromium.launch()
     pg = br.new_page(viewport={"width": 900, "height": 1100}, device_scale_factor=2, color_scheme="light")
     pg.goto(a.url, wait_until="domcontentloaded"); pg.wait_for_timeout(a.wait)
+    if a.css: pg.add_style_tag(content=a.css); pg.wait_for_timeout(300)
     H = pg.evaluate("document.documentElement.scrollHeight")
     if a.full: top, h = 0, H
     else: top, h = a.top, min(a.height, H - a.top)

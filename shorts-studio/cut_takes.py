@@ -241,10 +241,41 @@ segs, line_starts, t_cut = [], [], 0.0
 # SMOOTH (default since Nov 18 2026): a short eye-contact beat at each line edge (Peter now waits ~1 s at the lens before and
 # after each line, so 0.25/0.3 s never shows a look-away); env EDGE_IN/EDGE_OUT override (old tight values 0.04/0.07).
 EDGE_IN, EDGE_OUT = float(os.environ.get("EDGE_IN", "0.25")), float(os.environ.get("EDGE_OUT", "0.3"))
+def leading_tail(t0, t1, db=-45.0):
+    """Nov 18 2026 (Short 06): a line kept right after a DROPPED line ("One catch ... a paid Claude plan. | But the skills...")
+    got Whisper's "But" stamped at 103.08 s, glued to "plan." (102.74-103.08), while the real "But" starts ~104.0 s: the edge
+    pad then kept "plan" in the cut. If the sound at t0 is already running (the tail of the word before), followed by 0.3 s+ of
+    quiet before t1, return (quiet start, next onset); else None. A real line start begins from silence, so this never fires
+    on a clean start."""
+    import array, math
+    pcm = subprocess.run([FF, "-v", "error", "-ss", f"{t0:.3f}", "-to", f"{t1:.3f}", "-i", raw, "-vn", "-ac", "1", "-ar", "16000",
+                          "-f", "s16le", "-"], capture_output=True).stdout
+    s = array.array("h", pcm); n = 160
+    loud = [math.sqrt(sum(x * x for x in s[i:i + n]) / n) > 32768 * 10 ** (db / 20) for i in range(0, len(s) - n + 1, n)]
+    if not any(loud[:3]): return None                # silence at t0: a clean start, nothing to skip
+    k = last = 0
+    while k < len(loud):                              # the tail of the previous word (dips under 0.3 s bridged)
+        if loud[k]: last = k
+        elif k - last >= 30: break
+        k += 1
+    if k >= len(loud): return None                    # no 0.3 s quiet: cannot separate
+    q = last + 1
+    while k < len(loud) and not loud[k]: k += 1       # the quiet after it, up to the real speech
+    if k >= len(loud): return None
+    return t0 + q * n / 16000, t0 + k * n / 16000
+
 for ranges in chosen:
     line_starts.append(round(t_cut / SPEED, 3))
-    for a, b in ranges:  # a dropped sentence retake between ranges is cut like a line edge
+    for j, (a, b) in enumerate(ranges):  # a dropped sentence retake between ranges is cut like a line edge
         s = max(0, W[a]["s"] - EDGE_IN)
+        if j == 0 and a > 0:
+            s = max(s, W[a - 1]["e"])   # never pad back into the word before (a dropped line's last word)
+            # window to the NEXT word's stamp: in 06 the real "But" (~105.0 s) came 2 s after its stamp (103.08 s)
+            lt = leading_tail(s, W[min(a + 1, b)]["s"] + 0.5)
+            if lt:
+                s = max(lt[0] + 0.05, lt[1] - EDGE_IN)
+                W[a]["e"] = max(W[a]["e"], lt[1] + 0.15)   # the word really ends after its real onset (no inner-pause split before it)
+                print(f"  line start at {W[a]['s']:.2f}s (\"{W[a]['w']}\") sat on the previous word's tail; starts at {s:.2f}s (speech at {lt[1]:.2f}s)")
         for k in range(a, b):
             if W[k + 1]["s"] - W[k]["e"] > LONG_PAUSE:
                 h = KEEP_PAUSE / 2
