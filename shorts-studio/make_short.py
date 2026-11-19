@@ -35,9 +35,15 @@ def run(label, cmd, cwd=ROOT):
     if rc not in (0, 1) or (rc == 1 and label != "empty-space check"):
         sys.exit(f"stage failed: {label}")
 
-run("transcribe raw", ["py", str(ROOT / "transcribe.py"), str(raw), str(work / "words.json")], cwd=work)
-run("pick last takes + cut", ["py", str(ROOT / "cut_takes.py"), str(raw), str(work / "words.json"), str(script), str(work / "face_cut.mp4"), str(work / "lines.json")])
-run("transcribe cut", ["py", str(ROOT / "transcribe.py"), str(work / "face_cut.mp4"), str(work / "words_cut.json")], cwd=work)
+# Flags (Nov 18 2026, the per-Short session loop): --skip-cut reuses face_cut.mp4 + words_cut.json (scene iteration only);
+# --check-only stops after the check frames + contact sheet (run the checker agent, fix, re-run with --skip-cut);
+# --name "04 Pull data from almost any website" = the file name on the Desktop (default: the slug).
+skip_cut, check_only = "--skip-cut" in sys.argv, "--check-only" in sys.argv
+name = sys.argv[sys.argv.index("--name") + 1] if "--name" in sys.argv else slug
+if not skip_cut:
+    run("transcribe raw", ["py", str(ROOT / "transcribe.py"), str(raw), str(work / "words.json")], cwd=work)
+    run("pick last takes + cut", ["py", str(ROOT / "cut_takes.py"), str(raw), str(work / "words.json"), str(script), str(work / "face_cut.mp4"), str(work / "lines.json")])
+    run("transcribe cut", ["py", str(ROOT / "transcribe.py"), str(work / "face_cut.mp4"), str(work / "words_cut.json")], cwd=work)
 pub = ROOT / "public" / slug; pub.mkdir(parents=True, exist_ok=True)
 shutil.copy(work / "face_cut.mp4", pub / "face.mp4"); shutil.copy(work / "words_cut.json", scenes.parent / "words.json")
 # side fill of the face card: a blurred still of the wall above his head (a still, not a 2nd video: that doubled render time)
@@ -45,12 +51,22 @@ run("wall still", [FF, "-v", "error", "-y", "-ss", "1", "-i", str(pub / "face.mp
 frames = ROOT / "out" / f"frames_{slug}"; shutil.rmtree(frames, ignore_errors=True); frames.mkdir(parents=True)
 run("check frames", f"node frames.mjs {slug} out/frames_{slug}")
 run("empty-space check", ["py", "check_frames.py", "--frames-only", str(frames)])
+# contact sheet: every check frame on one image, read it first (whole-Short view in one look)
+from PIL import Image
+fs = sorted(frames.glob("s_*.png")); ims = [Image.open(f).resize((216, 384)) for f in fs]
+sheet = Image.new("RGB", (216 * 8, 384 * ((len(ims) + 7) // 8)), "white")
+for i, im in enumerate(ims): sheet.paste(im, ((i % 8) * 216, (i // 8) * 384))
+sheet.save(ROOT / "out" / f"sheet_{slug}.png"); print("contact sheet:", ROOT / "out" / f"sheet_{slug}.png")
+print("cut transcript:", " ".join(w["w"] for w in __import__("json").load(open(work / "words_cut.json"))))
+if check_only:
+    print("CHECK-ONLY: run the checker agent (checker_prompt.md) on", frames); [print(f"  {l:<22}{s:>5}s") for l, s in log]
+    sys.exit(0)
 run("full render", f"npx remotion render src/index.ts {slug} out/{slug}.mp4 --concurrency=2 --codec=h264 --crf=18 --log=error")
 run("finalize audio", ["py", "finalize.py", f"out/{slug}.mp4", f"out/{slug}_final.mp4"])
-dst = pathlib.Path.home() / "Desktop" / "Shorts - final" / f"{slug}.mp4"; dst.parent.mkdir(exist_ok=True)
+dst = pathlib.Path.home() / "Desktop" / "Shorts - final" / f"{name}.mp4"; dst.parent.mkdir(exist_ok=True)
 shutil.copy(ROOT / "out" / f"{slug}_final.mp4", dst)
 total = round(time.time() - t0)
-print(f"\nDONE {dst}  total {total}s"); [print(f"  {l:<22}{s:>5}s") for l, s in log]
+print(f"DONE {dst}  total {total}s"); [print(f"  {l:<22}{s:>5}s") for l, s in log]
 with open(ROOT / "timings.csv", "a", newline="") as f:
     w = csv.writer(f); [w.writerow([datetime.datetime.now().isoformat(timespec="minutes"), slug, l, s]) for l, s in log]
     w.writerow([datetime.datetime.now().isoformat(timespec="minutes"), slug, "TOTAL machine", total])

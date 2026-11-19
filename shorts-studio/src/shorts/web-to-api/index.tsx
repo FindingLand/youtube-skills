@@ -5,40 +5,12 @@
 // Repo facts verified Nov 18 2026 (screenshot): kalil0321/reverse-api-engineer, 3.9k stars, MIT, "Works with Claude Code, Codex, ...".
 // shop.example.com (reserved example domain) and every product / price below are ILLUSTRATIVE mocks of a fictional shop, not a real run.
 import React from "react";
-import {interpolate, Img, staticFile, Easing} from "remotion";
-import {Card, Mono, Pill, Sweep, Icon, Logo, Cursor, typed, pop, makeShort, FullCtx, SANS, SERIF, MONO, BLUE, INK, OK, BAD, GOLDFISH, ELEPHANT, TOP, H, HOOK_TOP, HOOK_H, REPO, W} from "../../kit";
+import {interpolate} from "remotion";
+import {Card, Mono, Pill, Sweep, Icon, Logo, Cursor, typed, pop, makeShort, FullCtx, Shot, Chip, SANS, SERIF, MONO, BLUE, INK, OK, BAD, GOLDFISH, ELEPHANT, TOP, H, HOOK_TOP, HOOK_H, REPO, W} from "../../kit";
 import words from "./words.json";
 
 const SHOP = "shop.example.com";
 const PRODUCTS: [string, string][] = [["Desk Lamp", "$24.00"], ["Office Chair", "$31.00"], ["Notebook Set", "$19.00"], ["Water Bottle", "$12.50"]];
-
-// A real screenshot seen through the card: keyframed crop (pan/zoom) + highlights that land on the spoken words.
-// Coordinates are image pixels (2x screenshots, 1800x2200). Box = the card's content area; inside a FULL shot the kit zooms
-// content 1.3x, so the box is measured before that zoom.
-type Key = {at: number; cx: number; cy: number; w: number};
-type Mark = {x: number; y: number; w: number; h: number; from: number; to: number; box?: boolean};
-const Shot: React.FC<{d: number; src: string; iw: number; ih: number; keys: Key[]; marks?: Mark[]; boxH?: number}> = ({d, src, iw, ih, keys, marks = [], boxH}) => {
-  const full = React.useContext(FullCtx);
-  const BW = full ? 952 / 1.3 : 892, BH = boxH ?? (full ? 976 / 1.3 : 616);
-  const ats = keys.map((k) => k.at);
-  const ip = (f: (k: Key) => number) => keys.length === 1 ? f(keys[0]) :
-    interpolate(d, ats, keys.map(f), {extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic)});
-  const cx = ip((k) => k.cx), cy = ip((k) => k.cy), w = ip((k) => k.w);
-  const sc = BW / w, h = w * BH / BW;
-  const X = (x: number) => (x - (cx - w / 2)) * sc, Y = (y: number) => (y - (cy - h / 2)) * sc;
-  return (
-    <div style={{position: "relative", width: BW, height: BH, overflow: "hidden", borderRadius: 14, background: "#fff"}}>
-      <Img src={staticFile(src)} style={{position: "absolute", left: X(0), top: Y(0), width: iw * sc, height: ih * sc, maxWidth: "none"}} />
-      {marks.map((m, i) => {
-        const p = interpolate(d, [m.from, m.to], [0, 1], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
-        return m.box
-          ? <div key={i} style={{position: "absolute", left: X(m.x), top: Y(m.y), width: m.w * sc, height: m.h * sc, border: `6px solid ${BLUE}`, borderRadius: 14,
-              opacity: p, transform: `scale(${1.08 - 0.08 * p})`, boxShadow: "0 0 24px rgba(0,133,255,.45)"}} />
-          : <div key={i} style={{position: "absolute", left: X(m.x), top: Y(m.y), width: m.w * sc * p, height: m.h * sc, background: "rgba(0,133,255,.28)", borderRadius: 6}} />;
-      })}
-    </div>
-  );
-};
 
 // 1. "This free tool pulls data from almost any website": the tool's real hero art; "Turn websites" boxed on "any website"
 const S1Hero: React.FC<{d: number}> = ({d}) => (
@@ -256,21 +228,14 @@ const S12Bots: React.FC<{d: number}> = ({d}) => {
 };
 
 // 13. "But the tool itself is free and open source": each word lands as it is said
-const S13Free: React.FC<{d: number}> = ({d}) => {
-  const chip = (t: string, at: number) => {
-    const k = pop(d, at);
-    return <div style={{padding: "22px 40px", borderRadius: 22, border: `4px solid ${BLUE}`, background: "#E7F1FF", color: "#0B3D91", fontFamily: SERIF, fontStyle: "italic",
-      fontWeight: 800, fontSize: 96, opacity: k, transform: `scale(${0.8 + 0.2 * k})`}}>{t}</div>;
-  };
-  return (
-    <Card top={TOP} h={H} d={d} url="github.com/kalil0321/reverse-api-engineer">
-      <div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: 46, paddingTop: 60}}>
-        {chip("Free", 36)}
-        {chip("Open source", 54)}
-      </div>
-    </Card>
-  );
-};
+const S13Free: React.FC<{d: number}> = ({d}) => (
+  <Card top={TOP} h={H} d={d} url="github.com/kalil0321/reverse-api-engineer">
+    <div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: 46, paddingTop: 60}}>
+      <Chip d={d} at={36} text="Free" />
+      <Chip d={d} at={54} text="Open source" />
+    </div>
+  </Card>
+);
 
 // 14. "Link's in the description": closing card (kit EndCard look; "Open source" sized to one line)
 const S14End: React.FC<{d: number}> = ({d}) => {

@@ -2,7 +2,7 @@
 // Short's config (words.json + scenes anchored to script phrases) into a Remotion component.
 // A new Short = src/shorts/<slug>/index.tsx (scenes + config) + words.json. No layout code per Short.
 import React from "react";
-import {AbsoluteFill, OffthreadVideo, Audio, Img, staticFile, useCurrentFrame, interpolate, spring, Sequence} from "remotion";
+import {AbsoluteFill, OffthreadVideo, Audio, Img, staticFile, useCurrentFrame, interpolate, spring, Sequence, Easing} from "remotion";
 import {loadFont as loadInter} from "@remotion/google-fonts/Inter";
 import {loadFont as loadPlayfair} from "@remotion/google-fonts/PlayfairDisplay";
 
@@ -114,6 +114,42 @@ export const EndCard: React.FC<{d: number; big?: string; folder?: string}> = ({d
 };
 
 // ---------- one Short ----------
+// ---------- real screenshots + word chips (from Short 04 v3, Nov 18 2026: the reference Short) ----------
+// A real screenshot seen through the card: keyframed crop (pan/zoom) + highlights that land on the spoken words.
+// Coordinates are image pixels (2x screenshots, 1800x2200). Box = the card's content area; inside a FULL shot the kit zooms
+// content 1.3x, so the box is measured before that zoom.
+export type ShotKey = {at: number; cx: number; cy: number; w: number};
+export type ShotMark = {x: number; y: number; w: number; h: number; from: number; to: number; box?: boolean};
+export const Shot: React.FC<{d: number; src: string; iw: number; ih: number; keys: ShotKey[]; marks?: ShotMark[]; boxH?: number}> = ({d, src, iw, ih, keys, marks = [], boxH}) => {
+  const full = React.useContext(FullCtx);
+  const BW = full ? 952 / 1.3 : 892, BH = boxH ?? (full ? 976 / 1.3 : 616);
+  const ats = keys.map((k) => k.at);
+  const ip = (f: (k: ShotKey) => number) => keys.length === 1 ? f(keys[0]) :
+    interpolate(d, ats, keys.map(f), {extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic)});
+  const cx = ip((k) => k.cx), cy = ip((k) => k.cy), w = ip((k) => k.w);
+  const sc = BW / w, h = w * BH / BW;
+  const X = (x: number) => (x - (cx - w / 2)) * sc, Y = (y: number) => (y - (cy - h / 2)) * sc;
+  return (
+    <div style={{position: "relative", width: BW, height: BH, overflow: "hidden", borderRadius: 14, background: "#fff"}}>
+      <Img src={staticFile(src)} style={{position: "absolute", left: X(0), top: Y(0), width: iw * sc, height: ih * sc, maxWidth: "none"}} />
+      {marks.map((m, i) => {
+        const p = interpolate(d, [m.from, m.to], [0, 1], {extrapolateLeft: "clamp", extrapolateRight: "clamp"});
+        return m.box
+          ? <div key={i} style={{position: "absolute", left: X(m.x), top: Y(m.y), width: m.w * sc, height: m.h * sc, border: `6px solid ${BLUE}`, borderRadius: 14,
+              opacity: p, transform: `scale(${1.08 - 0.08 * p})`, boxShadow: "0 0 24px rgba(0,133,255,.45)"}} />
+          : <div key={i} style={{position: "absolute", left: X(m.x), top: Y(m.y), width: m.w * sc * p, height: m.h * sc, background: "rgba(0,133,255,.28)", borderRadius: 6}} />;
+      })}
+    </div>
+  );
+};
+
+// Word chip: a big italic word that pops in ON the spoken word (04 "Free" / "Open source"). Text = speech (shorts-guide 3-ter rule 5)
+export const Chip: React.FC<{d: number; at: number; text: string; size?: number}> = ({d, at, text, size = 96}) => {
+  const k = pop(d, at);
+  return <div style={{padding: "22px 40px", borderRadius: 22, border: `4px solid ${BLUE}`, background: "#E7F1FF", color: "#0B3D91", fontFamily: SERIF, fontStyle: "italic",
+    fontWeight: 800, fontSize: size, opacity: k, transform: `scale(${0.8 + 0.2 * k})`}}>{text}</div>;
+};
+
 export type ShortConfig = {
   slug: string;                       // public/<slug>/face.mp4 + wall.jpg, composition id
   words: W[];                         // words.json of the CUT video (transcribe.py)
