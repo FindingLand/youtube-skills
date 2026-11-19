@@ -22,7 +22,9 @@ FIND_JS = """(t) => {
   const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   let n; const low = t.toLowerCase(); const all = [];
   while ((n = w.nextNode())) {
-    const i = n.textContent.toLowerCase().indexOf(low);
+    // exact case first (Nov 18 2026, egm: "Elephant" hit the lowercase repo name "elephant-goldfish-model" before the README's
+    // bold "Elephant"; 05: "Outbound Strategist" hit a commit line); the case-insensitive match is only the fallback
+    const ex = n.textContent.indexOf(t), i = ex >= 0 ? ex : n.textContent.toLowerCase().indexOf(low);
     if (i < 0) continue;
     const el = n.parentElement; const cs = getComputedStyle(el);
     if (cs.visibility === 'hidden' || cs.display === 'none' || !el.offsetParent) continue;
@@ -30,9 +32,9 @@ FIND_JS = """(t) => {
     const b = r.getBoundingClientRect(); if (!b.width) continue;
     // one rect per visual line: a phrase that wraps gets a highlight per line, not one box over both lines
     const lines = [...r.getClientRects()].filter(q => q.width > 2).map(q => [q.left + scrollX, q.top + scrollY, q.width, q.height]);
-    all.push([b.left + scrollX, b.top + scrollY, b.width, b.height, lines]);
+    all.push([b.left + scrollX, b.top + scrollY, b.width, b.height, lines, ex >= 0 ? 0 : 1]);
   }
-  return all;
+  return all.sort((p, q) => p[5] - q[5]);   // stable: exact-case matches first, page order inside each group
 }"""
 with sync_playwright() as p:
     br = p.chromium.launch()

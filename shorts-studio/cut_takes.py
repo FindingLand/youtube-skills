@@ -68,10 +68,15 @@ def drop_restarts(a, b, li):
     the pause before it to the LAST repeat. A word right before the repeat that Whisper merged ("FieldSync" = "Fills in")
     stays with the kept try."""
     out = []
+    # Nov 18 2026 (egm line 8): a 3-word run the SCRIPT line itself says twice is not a restart ("...where they cost nothing,
+    # not in your code, where they cost hours"); without this the cut kept only "where they cost hours and tokens."
+    sl = lines[li]
+    script_rep = {t for t in (tuple(sl[i:i + 3]) for i in range(len(sl) - 2)) if sum(tuple(sl[i:i + 3]) == t for i in range(len(sl) - 2)) > 1}
     while True:
         tri = lambda j: tuple(norm(W[j + k]["w"]) for k in range(3))
         hit = None
         for j in range(a, b - 4):
+            if tri(j) in script_rep: continue
             ks = [k for k in range(j + 3, b - 1) if tri(k) == tri(j)]
             if ks: hit = (j, ks[-1]); break
         if not hit: return out + [(a, b)]

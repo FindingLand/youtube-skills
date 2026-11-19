@@ -1,161 +1,159 @@
-// EGM Short (Nov 17 2026): "Google's free fix for sloppy AI code". Scenes anchored to the script in scripts/egm.txt.
+// EGM Short v2 (Nov 18 2026): "Google's free fix for sloppy AI code" (google/elephant-goldfish-model, Apache-2.0).
+// Rebuilt to the Short 04 v3 standard (shorts-guide 3-ter / 3g): REAL screenshots (shoot.py, Playwright 2x, Nov 18 2026) of the
+// GitHub repo + README and Google's own launch post, panned and highlighted ON the spoken word (kit cues()); one FULL span over the
+// name + the elephant/goldfish mechanism (the hard part); on-screen text only repeats what is said; no drawn mocks, no music.
+// Facts re-verified Nov 18 2026: repo 21.2k stars, Apache-2.0; blog (Oct 22 2026): "Originally, this plugin was developed
+// internally for Google software engineers, and is now open source."
+// The take (D:/Shorts/egm2, Nov 17) starts on "just": "Google" was never recorded. The first 0.12 s is the tail of "Google"
+// (Whisper hears "People"); it is dropped from the captions, the hook title + the repo's Google logo carry the brand.
 import React from "react";
-import {AbsoluteFill} from "remotion";
-import {Card, Mono, Pill, Sweep, Icon, Logo, Cursor, typed, pop, EndCard, makeShort, SANS, SERIF, MONO, BLUE, INK, BAD, ELEPHANT, GOLDFISH, BRAND_GRADIENT, TOP, H, HOOK_TOP, HOOK_H, W} from "../../kit";
+import {Card, Shot, Chip, Pill, Icon, EndCard, makeShort, cues, ELEPHANT, BAD, TOP, H, HOOK_TOP, HOOK_H, W} from "../../kit";
 import words from "./words.json";
 
-const S1Repo: React.FC<{d: number}> = ({d}) => (
-  <Card top={HOOK_TOP} h={HOOK_H} d={d} url="github.com/google/elephant-goldfish-model">
-    <div style={{fontFamily: SANS}}>
-      <div style={{display: "flex", alignItems: "center", gap: 18}}>
-        <Logo src="github-icon.svg" size={56} />
-        <div style={{fontSize: 44, color: "#1F2328"}}><span style={{color: "#0969DA"}}>google</span> / <b style={{color: "#0969DA"}}>elephant-goldfish-model</b></div>
-      </div>
-      <div style={{marginTop: 18, fontSize: 32, color: "#59636E"}}>Open-source plugin for designing and reviewing software with agents</div>
-      <div style={{marginTop: 22, display: "flex", gap: 16, fontSize: 32, fontWeight: 600, color: "#1F2328"}}>
-        {["★ 20.6k", "Apache-2.0", "Claude Code"].map((x, i) => (
-          <span key={x} style={{padding: "8px 18px", border: "2px solid #D1D9E0", borderRadius: 10, opacity: pop(d, 4 + i * 4)}}>{x}</span>
-        ))}
-      </div>
+const WS = (words as W[]).filter((w, i) => !(i === 0 && /^people/i.test(w.w)));
+const REPO_URL = "github.com/google/elephant-goldfish-model";
+const REPO = "egm/egm_repo_full.png";            // 1800x13530, whole repo page (header, README, How it works table)
+const BLOG = "egm/googleblog_egm_full.png";      // 1800x8268, opensource.googleblog.com launch post, Oct 22 2026
+const BLOG_URL = "opensource.googleblog.com";
+const IW = 1800;
+type B = {x: number; y: number; w: number; h: number};
+const hl = (b: B, from: number, to: number) => ({...b, from, to});
+const bx = (b: B, at: number) => ({...b, from: at, to: at + 8, box: true});
+
+// 1 (hook, under the title) "[Google] just made their fix for sloppy AI code free": the repo header, Google logo + name, push in
+const S1Hook: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "just made");
+  return (
+    <Card top={HOOK_TOP} h={HOOK_H} d={d} url={REPO_URL}>
+      <Shot d={d} src={REPO} iw={IW} ih={13530} boxH={316}
+        keys={[{at: 0, cx: 820, cy: 360, w: 1560}, {at: 110, cx: 560, cy: 372, w: 1150}]}
+        marks={[hl({x: 90, y: 346, w: 462, h: 54}, c("fix"), c("code"))]} />
+    </Card>
+  );
+};
+
+// 2 "They built it for their own engineers, and now anyone can install it": Google's launch post says exactly that
+const S2Blog: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "they built");
+  const e = c("engineers"), n = c("now");
+  return (
+    <Card top={TOP} h={H} d={d} url={BLOG_URL}>
+      <Shot d={d} src={BLOG} iw={IW} ih={8268}
+        keys={[{at: 0, cx: 690, cy: 4200, w: 1250}, {at: c("own") - 6, cx: 1000, cy: 4285, w: 900}, {at: e + 2, cx: 1000, cy: 4285, w: 900}, {at: e + 10, cx: 480, cy: 4310, w: 900}]}
+        marks={[hl({x: 719, y: 4262, w: 586, h: 46}, c("own"), e), hl({x: 24, y: 4310, w: 151, h: 46}, e, e + 8),
+          hl({x: 178, y: 4310, w: 349, h: 46}, n, c("anyone") + 10)]} />
+    </Card>
+  );
+};
+
+// 3 FULL "It's called the Elephant Goldfish Model, and it runs two kinds of agents": the README title + "Design with an
+// elephant. Review with a goldfish." (each half on its word)
+const S3Name: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "it's called");
+  const k = c("kind");
+  return (
+    <Card top={TOP} h={H} d={d} url={REPO_URL}>
+      <Shot d={d} src={REPO} iw={IW} ih={13530}
+        keys={[{at: 0, cx: 640, cy: 3660, w: 920}, {at: c("two") - 6, cx: 640, cy: 3700, w: 800}]}
+        marks={[hl({x: 290, y: 3606, w: 700, h: 86}, c("elephant"), c("model") + 8),
+          hl({x: 291, y: 3732, w: 353, h: 50}, c("two"), k), hl({x: 648, y: 3732, w: 326, h: 50}, k, c("agents") + 4)]} />
+    </Card>
+  );
+};
+
+// 4 FULL "You give it a task. The elephant remembers everything about your project, and writes the plan. Then the goldfish
+// agents read that plan with zero memory ..., and they try to break it": the README's "How it works" table, row by row
+const S4Table: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "you give");
+  const g = c("then the goldfish"), z = c("zero memory"), b = c("try to break");
+  return (
+    <Card top={TOP} h={H} d={d} url={REPO_URL}>
+      <Shot d={d} src={REPO} iw={IW} ih={13530}
+        keys={[{at: 0, cx: 640, cy: 10180, w: 1140}, {at: c("elephant") - 8, cx: 520, cy: 10150, w: 860}, {at: c("writes") - 8, cx: 520, cy: 10150, w: 860},
+          {at: c("writes"), cx: 740, cy: 10150, w: 860}, {at: g - 8, cx: 740, cy: 10150, w: 860}, {at: g + 2, cx: 520, cy: 10290, w: 860},
+          {at: b - 8, cx: 520, cy: 10290, w: 860}, {at: b, cx: 740, cy: 10290, w: 860}]}
+        marks={[bx({x: 104, y: 10431, w: 92, h: 62}, 2),
+          bx({x: 100, y: 10087, w: 172, h: 62}, c("elephant")),
+          hl({x: 301, y: 10097, w: 392, h: 50}, c("your project"), c("your project") + 8), hl({x: 301, y: 10145, w: 300, h: 50}, c("your project") + 8, c("project") + 14),
+          hl({x: 746, y: 10097, w: 361, h: 50}, c("writes"), c("writes") + 8), hl({x: 746, y: 10145, w: 325, h: 50}, c("writes") + 8, c("plan") + 6),
+          bx({x: 100, y: 10209, w: 168, h: 62}, c("goldfish")),
+          hl({x: 301, y: 10317, w: 272, h: 50}, z, z + 8), hl({x: 301, y: 10365, w: 194, h: 50}, z + 8, z + 14),
+          hl({x: 746, y: 10219, w: 381, h: 50}, b, b + 6), hl({x: 746, y: 10267, w: 380, h: 50}, b + 6, b + 12), hl({x: 746, y: 10315, w: 313, h: 50}, b + 12, b + 18)]} />
+    </Card>
+  );
+};
+
+// 5 (FULL, then face back on "you can't") "Every gap, every blind spot. You can't see your own mistakes. Someone who wasn't in the
+// room sees them in seconds": Google's post on the goldfish ("zero-context sessions ... share no blind spots ... probing for gaps")
+const S5Blind: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "every gap");
+  const y = c("you can't"), s = c("someone");
+  return (
+    <Card top={TOP} h={H} d={d} url={BLOG_URL}>
+      <Shot d={d} src={BLOG} iw={IW} ih={8268}
+        keys={[{at: 0, cx: 448, cy: 2900, w: 860}, {at: y - 4, cx: 448, cy: 2900, w: 860}, {at: y + 6, cx: 620, cy: 2990, w: 900}]}
+        marks={[hl({x: 125, y: 3030, w: 246, h: 46}, c("gap"), c("gap") + 10), hl({x: 579, y: 2982, w: 169, h: 46}, c("blind"), c("blind") + 10),
+          hl({x: 239, y: 2982, w: 333, h: 46}, c("can't see"), c("mistakes")), hl({x: 755, y: 2982, w: 254, h: 46}, c("mistakes"), c("mistakes") + 8),
+          bx({x: 536, y: 2934, w: 323, h: 46}, s)]} />
+    </Card>
+  );
+};
+
+// 6 "And Claude only starts coding after you approve the plan": the README, "You ... approve the specification before implementing"
+const S6Approve: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "and claude only");
+  const a = c("approve");
+  return (
+    <Card top={TOP} h={H} d={d} url={REPO_URL}>
+      <Shot d={d} src={REPO} iw={IW} ih={13530}
+        keys={[{at: 0, cx: 640, cy: 4040, w: 1120}, {at: a - 8, cx: 625, cy: 4080, w: 1090}]}
+        marks={[hl({x: 1051, y: 4212, w: 104, h: 50}, c("coding"), c("coding") + 6), hl({x: 92, y: 4260, w: 209, h: 50}, c("coding") + 6, c("after") + 6),
+          bx({x: 88, y: 4208, w: 70, h: 58}, c("you approve")), hl({x: 687, y: 4212, w: 367, h: 50}, a, a + 10)]} />
+    </Card>
+  );
+};
+
+// 7 "So the bugs get caught on paper, where they cost nothing, not in your code, where they cost hours and tokens"
+const S7Cost: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "so the bags");
+  const row = (icon: string, color: string, chip: string, at: number, pill: string, pat: number, ok: boolean) => (
+    <div style={{display: "flex", alignItems: "center", gap: 34}}>
+      <Icon src={icon} color={color} size={120} style={{opacity: d >= at - 4 ? 1 : 0.15}} />
+      <div style={{whiteSpace: "nowrap"}}><Chip d={d} at={at} text={chip} size={72} /><div style={{zoom: 1.05}}><Pill ok={ok} text={pill} d={d} at={pat} /></div></div>
     </div>
-  </Card>
-);
-
-const S2Code: React.FC<{d: number}> = ({d}) => {
-  const code = "function deliver(lead) {\n  fetch(hook.url, {body: lead})\n}";
-  return (
-    <Card dark top={HOOK_TOP} h={HOOK_H} d={d} title="Write(src/webhooks/deliver.js)">
-      <Mono>{typed(code, d, 0, 60)}<Cursor d={d} /></Mono>
-      <div style={{display: "flex", gap: 14}}><Pill text="no retry" d={d} at={18} /><Pill text="errors ignored" d={d} at={28} /></div>
-    </Card>
   );
-};
-
-const S3Google: React.FC<{d: number}> = ({d}) => {
-  const k = pop(d, 12);
+  // "So the bugs get caught" lands first (frame study: the card sat ~2 s nearly empty until "paper")
   return (
-    <Card top={TOP} h={H} d={d} url="opensource.googleblog.com">
-      <div style={{fontFamily: SANS, color: INK}}>
-        <div style={{display: "flex", alignItems: "center", gap: 14, fontSize: 30, color: "#59636E", fontWeight: 500}}><Logo src="google-icon.svg" size={40} />Google Open Source Blog · Oct 22 2026</div>
-        <div style={{marginTop: 22, fontSize: 66, fontWeight: 800, lineHeight: 1.08, letterSpacing: -1.5}}>Introducing the Elephant Goldfish Model plugin</div>
-        <div style={{marginTop: 26, fontSize: 42, lineHeight: 1.4, fontWeight: 500}}><Sweep d={d} from={6} to={20}>Developed for Google's own engineers, now open source.</Sweep></div>
-        <div style={{marginTop: 44, display: "flex", alignItems: "center", gap: 30, opacity: k, transform: `scale(${0.85 + 0.15 * k})`, transformOrigin: "left center"}}>
-          <div style={{width: 150, height: 150, borderRadius: 32, background: "#fff", boxShadow: "0 8px 30px rgba(0,0,0,.12)", display: "flex", alignItems: "center", justifyContent: "center"}}><Logo src="google-icon.svg" size={104} /></div>
-          <div style={{fontSize: 56, fontWeight: 800, lineHeight: 1.15, letterSpacing: -1}}>Built by <span style={{background: BRAND_GRADIENT, WebkitBackgroundClip: "text", color: "transparent"}}>Google</span><br /><span style={{fontFamily: SERIF, fontStyle: "italic", color: BLUE}}>Free for everyone</span></div>
-        </div>
+    <Card top={TOP} h={H} d={d} title="Bugs">
+      <div style={{display: "flex", justifyContent: "center", marginBottom: 34, whiteSpace: "nowrap"}}><Chip d={d} at={2} text="Bugs get caught" size={78} /></div>
+      <div style={{display: "flex", flexDirection: "column", gap: 34, paddingLeft: 0}}>
+        {row("memo_flat.svg", ELEPHANT, "On paper", c("paper"), "cost nothing", c("nothing"), true)}
+        {row("laptop_flat.svg", BAD, "In your code", c("not"), "cost hours and tokens", c("hours"), false)}
       </div>
     </Card>
   );
 };
 
-const S4Explainer: React.FC<{d: number}> = ({d}) => {
-  const a = pop(d, 2), b = pop(d, 7);
-  const box = (bg: string, line: string, c: string, icon: string, t: string, sub: string, k: number) => (
-    <div style={{flex: 1, borderRadius: 22, background: bg, border: `2px solid ${line}`, padding: "40px 20px", textAlign: "center", opacity: k, transform: `scale(${0.9 + 0.1 * k})`, filter: `blur(${(1 - k) * 8}px)`}}>
-      <Icon src={icon} color={c} size={190} />
-      <div style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 76, color: c, marginTop: 10}}>{t}</div>
-      <div style={{fontFamily: SANS, fontWeight: 600, fontSize: 40, color: "#3B434C", marginTop: 8}}>{sub}</div>
-    </div>
-  );
-  return (
-    <AbsoluteFill>
-      <div style={{position: "absolute", top: 200, width: "100%", textAlign: "center", fontFamily: SANS, fontWeight: 800, fontSize: 70, color: INK, letterSpacing: -1.5}}>Elephant-Goldfish Model</div>
-      <div style={{position: "absolute", top: 320, left: 60, right: 60, display: "flex", gap: 28}}>
-        {box("#E7F1FF", "#C7DDFB", ELEPHANT, "elephant_flat.svg", "Elephant", "Remembers everything", a)}
-        {box("#FFF1E4", "#FBD9B8", GOLDFISH, "fish_flat.svg", "Goldfish", "Remembers nothing", b)}
-      </div>
-    </AbsoluteFill>
-  );
-};
-
-const S5Terminal: React.FC<{d: number}> = ({d}) => {
-  const cmd = "/egm:egm-brainstorm Add webhook delivery";
-  const lines = ["Read(src/server.js)", "Read(src/leads.js)", "Read(README.md)", "Write(concepts_brief.md)"];
-  return (
-    <Card dark top={TOP} h={H} d={d} fill={1.12} title="Claude Code · ~/lead-inbox">
-      <div style={{display: "flex", alignItems: "center", gap: 14}}><Logo src="claude-icon.svg" size={44} /><Mono c="#8A8A8A" size={34}>Claude Code · egm@egm loaded</Mono></div>
-      <Mono c="#fff">{"> " + typed(cmd, d, 0, 70)}{d < 20 && <Cursor d={d} />}</Mono>
-      {d > 16 && <div style={{display: "flex", alignItems: "center", gap: 12, marginTop: 6}}><Icon src="elephant_flat.svg" color={ELEPHANT} size={46} /><Mono c="#7AB8FF" size={40}>Elephant · full context</Mono></div>}
-      {lines.map((l, i) => d > 22 + i * 5 && <Mono key={l} c={l.startsWith("Write") ? "#FFD479" : "#5BD68A"} size={36}>{"  ● " + l}</Mono>)}
-    </Card>
-  );
-};
-
-const S6Plan: React.FC<{d: number}> = ({d}) => {
-  const issues = ["Same lead created twice in HubSpot", "Bad email retries 24h, then lost", "Alert can fail silently", "Lead list exposed with no login"];
-  return (
-    <Card top={TOP} h={H} d={d} fill={0.92} title="concepts_brief.md">
-      <div style={{fontFamily: SANS, color: INK, position: "relative"}}>
-        <div style={{fontSize: 30, color: "#59636E", fontWeight: 500}}>Here's the plan</div>
-        <div style={{marginTop: 4, fontSize: 68, fontWeight: 800, letterSpacing: -1.5}}>Lead notifications</div>
-        <div style={{marginTop: 8, fontSize: 34, lineHeight: 1.5, color: "#3B434C", fontWeight: 500}}>DELIVERY  retry with backoff, 24h<br />STORAGE  SQLite outbox<br />DEDUPE  search HubSpot by email</div>
-        <div style={{position: "absolute", right: 0, top: 0, display: "flex", gap: 4}}>
-          {[0, 1, 2, 3].map((i) => <Icon key={i} src="fish_flat.svg" color={GOLDFISH} size={60} style={{opacity: pop(d, 2 + i * 4), transform: `translateY(${(1 - pop(d, 2 + i * 4)) * -60}px)`}} />)}
-        </div>
-        <div style={{marginTop: 10}}>{issues.map((t, i) => <div key={t}><Pill text={t} d={d} at={4 + i * 8} /></div>)}</div>
-      </div>
-    </Card>
-  );
-};
-
-const Review: React.FC<{d: number; goldfish?: boolean}> = ({d, goldfish}) => (
-  <Card top={TOP} h={H} d={d} fill={goldfish ? 1.32 : 1.3} url="github.com/lead-inbox/pull/12">
-    <div style={{fontFamily: SANS}}>
-      <div style={{display: "flex", alignItems: "center", gap: 14}}>
-        <Icon src={goldfish ? "fish_flat.svg" : "elephant_flat.svg"} color={goldfish ? GOLDFISH : ELEPHANT} size={64} />
-        <div style={{fontSize: 46, fontWeight: 800, color: goldfish ? GOLDFISH : ELEPHANT, letterSpacing: -0.5}}>{goldfish ? "Goldfish · fresh eyes" : "Elephant · own plan"}</div>
-      </div>
-      <div style={{marginTop: 14, borderRadius: 12, border: "1px solid #D1D9E0", overflow: "hidden"}}>
-        <div style={{fontFamily: MONO, fontSize: 36, padding: "6px 16px", background: goldfish ? "#FFEBE9" : "#fff"}}><span style={{color: "#777"}}>12 </span> createContact(lead)</div>
-        <div style={{fontFamily: MONO, fontSize: 36, padding: "6px 16px", background: goldfish ? "#fff" : "#FFF8C5"}}><span style={{color: "#777"}}>13 </span> markSent(lead.id)</div>
-      </div>
-      {goldfish ? (
-        d > 12 && <div style={{marginTop: 14, padding: "12px 16px", borderLeft: `6px solid ${BAD}`, background: "#FDEDEC", fontSize: 36, color: "#8E1B14", fontWeight: 500}}>If the reply is lost, the retry creates the contact twice.<div style={{marginTop: 8}}><Pill text="Changes requested" d={d} at={18} /></div></div>
-      ) : (
-        d > 6 && <div style={{marginTop: 14, padding: "12px 16px", borderLeft: `6px solid ${ELEPHANT}`, background: "#E7F1FF", fontSize: 36, color: "#0B3D91", fontWeight: 500}}>Looks right to me. I wrote it.<div style={{marginTop: 8}}><Pill ok text="Elephant approved" d={d} at={10} /></div></div>
-      )}
-    </div>
-  </Card>
-);
-const S7Elephant: React.FC<{d: number}> = ({d}) => <Review d={d} />;
-const S8Goldfish: React.FC<{d: number}> = ({d}) => <Review d={d} goldfish />;
-
-const S9Approve: React.FC<{d: number}> = ({d}) => (
-  <Card dark top={TOP} h={H} d={d} title="Claude Code · ~/lead-inbox">
-    <Mono c="#fff" size={54}>Ready to code?</Mono>
-    <Mono c="#9A9A9A" size={38}>{`Lead notifications · 4 steps
- 1. SQLite outbox
- 2. Retry worker
- 3. HubSpot upsert by email
- 4. Failure alert`}</Mono>
-    <div style={{marginTop: 16, padding: "12px 20px", borderRadius: 12, background: d > 18 ? BLUE : "#2A2A2A"}}><Mono c="#fff" size={44}>❯ 1. Yes, approve the plan</Mono></div>
-    <Mono c="#5BD68A" size={40}>{d > 28 ? `✓ User approved the plan
-  Building… (esc to interrupt)` : "  Waiting for your approval…"}</Mono>
-  </Card>
-);
-
-const S10Cost: React.FC<{d: number}> = ({d}) => (
-  <Card dark top={TOP} h={H} d={d} fill={1.2} title="Claude Code · ~/lead-inbox · no review">
-    {[0, 1, 2, 3].map((i) => (i === 0 || d > i * 10) && (
-      <div key={i}><Mono size={42}>{"> fixing deliver.js"}</Mono><Mono c={BAD} size={42}>{"  ✕ tests failed"}</Mono></div>
-    ))}
-  </Card>
-);
-
-const S11End: React.FC<{d: number}> = ({d}) => <EndCard d={d} />;
+// 8 "And it's free. Link's in the description."
+const S8End: React.FC<{d: number}> = ({d}) => <EndCard d={d} />;
 
 export const egm = makeShort({
   slug: "egm",
-  words: words as W[],
-  fix: {kind: "kinds", links: "Link", modal: "Model", gup: "gap", bags: "bugs", kept: "get", off: "of"},
-  key: ["sloppy", "free", "engineers", "plan", "zero", "blind", "mistakes", "seconds", "approve", "paper", "hours", "tokens"],
+  words: WS,
+  // from the CUT transcript: "kind" (old approved captions said "kinds"), "bags", "links"
+  fix: {kind: "kinds", bags: "bugs", links: "Link's", modal: "Model"},
+  key: ["sloppy", "free", "engineers", "anyone", "plan", "zero", "gap", "blind", "mistakes", "seconds", "approve", "paper", "nothing", "hours", "tokens"],
   noun: ["google", "elephant", "goldfish", "model", "claude"],
   anchors: [
-    ["google just", S1Repo], ["fix for", S2Code], ["they built", S3Google], ["it's called", S4Explainer], ["you give", S5Terminal],
-    ["the goldfish", S6Plan], ["every", S7Elephant], ["someone who", S8Goldfish], ["claude only", S9Approve], ["so the", S10Cost],
-    ["and it's free", S11End],
+    ["just made", S1Hook], ["they built", S2Blog], ["it's called", S3Name], ["you give", S4Table], ["every gap", S5Blind],
+    ["and claude only", S6Approve], ["so the bugs", S7Cost], ["and it's free", S8End],
   ],
-  hookEnd: 2,
+  // FULL (no face) from the name through the elephant/goldfish mechanism and "every gap, every blind spot" (the hard part);
+  // the face comes back on "You can't see your own mistakes". Two short FULL spans cover eyes-down-on-the-script stretches
+  // (5 fps sheet, Nov 18): line 7 "And Claude only ... approve the plan" and the end of line 8 "where they cost hours and tokens"
+  full: [["it's called", 21.2], ["and claude only", 3.8], ["code where", 2.6]],
+  hookEnd: 1,
   hook: {brand: "Google's", rest: "Free Fix For", box: "Sloppy AI Code"},
-  faceSrcTop: 690,
+  faceSrcTop: 640,
+  faceFit: "zoom",   // close take (chin at source y ~1640): full width cut the chin
 });

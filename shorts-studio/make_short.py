@@ -44,6 +44,9 @@ if not skip_cut:
     run("transcribe raw", ["py", str(ROOT / "transcribe.py"), str(raw), str(work / "words.json")], cwd=work)
     run("pick last takes + cut", ["py", str(ROOT / "cut_takes.py"), str(raw), str(work / "words.json"), str(script), str(work / "face_cut.mp4"), str(work / "lines.json")])
     run("transcribe cut", ["py", str(ROOT / "transcribe.py"), str(work / "face_cut.mp4"), str(work / "words_cut.json")], cwd=work)
+    # Nov 18 2026 (egm): the cut transcript next to the script, one row per line, OK/CHECK. Read every CHECK before building scenes
+    # (05 line 9 lost "hand it to a human"; egm line 8 lost half its words; both looked normal in the take printout)
+    subprocess.run(["py", str(ROOT / "cut_report.py"), str(work / "words_cut.json"), str(work / "lines.json"), str(script)])
 pub = ROOT / "public" / slug; pub.mkdir(parents=True, exist_ok=True)
 shutil.copy(work / "face_cut.mp4", pub / "face.mp4"); shutil.copy(work / "words_cut.json", scenes.parent / "words.json")
 # side fill of the face card: a blurred still of the wall above his head (a still, not a 2nd video: that doubled render time)
@@ -60,7 +63,7 @@ if "--no-frames" not in sys.argv:
     sheet = Image.new("RGB", (216 * 8, 384 * ((len(ims) + 7) // 8)), "white")
     for i, im in enumerate(ims): sheet.paste(im, ((i % 8) * 216, (i // 8) * 384))
     sheet.save(ROOT / "out" / f"sheet_{slug}.png"); print("contact sheet:", ROOT / "out" / f"sheet_{slug}.png")
-    print("cut transcript:", " ".join(w["w"] for w in __import__("json").load(open(work / "words_cut.json"))))
+    subprocess.run(["py", str(ROOT / "cut_report.py"), str(work / "words_cut.json"), str(work / "lines.json"), str(script)])
 if check_only:
     print("CHECK-ONLY: run the checker agent (checker_prompt.md) on", frames); [print(f"  {l:<22}{s:>5}s") for l, s in log]
     sys.exit(0)

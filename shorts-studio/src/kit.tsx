@@ -161,6 +161,9 @@ export type ShortConfig = {
   hook: {brand: string; rest: string; box: string; brandColor?: string; size?: number}; // line 1: brand word (gradient, or brandColor) + rest (size px, default 86: ~20 chars fit), line 2: blue italic box
   full?: [string, number][];          // FULL shots: [phrase where it starts, seconds]; no face, big card (cover look-aways)
   faceSrcTop?: number;                // source y (of 1920) shown at the face card's top edge: ~60 px above the hair
+  // "zoom" = bottom-aligned zoom-out with the blurred wall at the sides, for a CLOSE take (Nov 17 egm: chin at source y ~1640,
+  // so full width cut the chin and showed no shoulders; checker caught it Nov 18). Default "cover" = full width, for wide takes
+  faceFit?: "cover" | "zoom";
 };
 
 const FACE_CARD_TOP = 1040;
@@ -291,7 +294,8 @@ export const makeShort = (cfg: ShortConfig) => {
   // needs the zoom-out and gets the wall still at the sides.
   const srcTop = cfg.faceSrcTop ?? 690;
   const VIS_H = 1920 - FACE_CARD_TOP, CARD_W = 1080 - 92;
-  const FACE_H = Math.max(Math.round(VIS_H / (1920 - srcTop) * 1920), Math.ceil(CARD_W * 1920 / 1080));
+  const ZOOM_H = Math.round(VIS_H / (1920 - srcTop) * 1920);   // source rows srcTop..1920 fill the visible card height
+  const FACE_H = cfg.faceFit === "zoom" ? ZOOM_H : Math.max(ZOOM_H, Math.ceil(CARD_W * 1920 / 1080));
   const FACE_TOP = -Math.round(srcTop * FACE_H / 1920);   // video top, in card coordinates
   const ShotWrap: React.FC<{el: Scene}> = ({el: El}) => <El d={useCurrentFrame()} />;
 
