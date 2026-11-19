@@ -1,331 +1,158 @@
-// Short 02 (Nov 17 2026): "Claude Code Edited This Entire Short". Scenes anchored to scripts/claude-edits.txt.
-// Plan + facts table: findingland-all/client-memories/finding-land-internal/youtube/shorts/02-claude-edited-this-short/plan.md
-// Everything on screen is the real pipeline in this folder (make_short.py, cut_takes.py, transcribe.py, finalize.py,
-// frames.mjs, check_frames.py) and the real numbers in timings.csv (run egm_final, Nov 17 2026).
+// Short 02 v2 (Nov 19 2026): "Claude Code edited this entire Short". Rebuilt to the Short 04 v3 standard (shorts-guide 3-ter, 3g-3j).
+// The script describes OUR pipeline, so two spoken lines that are no longer true were CUT from the cut (rule 2: cut content, never
+// re-caption): "It cuts every pause longer than a quarter second, and speeds me up ten percent" (the cut is now smooth, real speed)
+// and "My last one took eleven minutes of machine time" (07 took ~13 min of machine time). Every other line is still true.
+// Real images only: the public repo's shorts-studio page (README rewritten Nov 19 to say today's pipeline in the spoken words),
+// remotion.dev, a frame of the real Short 04, the real checker contact sheet of Short 07. Highlights land on the spoken word (cues).
+// The Nov 17 v1 (drawn mocks, 1.1x, pauses cut) is kept at D:/Shorts/claude-edits/index_v1_nov17.tsx + v1_nov17/.
 import React from "react";
-import {interpolate} from "remotion";
-import {Card, Mono, Pill, Icon, Logo, Cursor, typed, pop, EndCard, makeShort, SANS, SERIF, MONO, BLUE, INK, GREY, OK, BAD, TOP, H, HOOK_TOP, HOOK_H, W} from "../../kit";
+import {Card, Shot, Chip, Icon, Logo, pop, makeShort, cues, SANS, BLUE, INK, TOP, H, HOOK_TOP, HOOK_H, REPO, W} from "../../kit";
 import words from "./words.json";
 
-const WORDS = words as W[];
-const CLAUDE = "#D97757";
-const clamp = {extrapolateLeft: "clamp", extrapolateRight: "clamp"} as const;
+const WS = words as W[];
+const URL = "github.com/FindingLand/youtube-skills";
+const R = "claude-edits/studio_repo_full.png", RW = 1800, RH = 5008;   // shoot.py --full, Nov 19 2026
+type B = {x: number; y: number; w: number; h: number};
+const hl = (b: B, from: number, to: number) => ({...b, from, to});
+const bx = (b: B, at: number) => ({...b, from: at, to: at + 8, box: true});
 
-// 1. "Claude Code edited this entire Short." The one command that makes this Short
+// 1 (hook) "Claude Code edited this entire Short. I filmed it on my phone in one take, retakes and all.": the README title + intro
 const S1Hook: React.FC<{d: number}> = ({d}) => {
-  const cmd = "py make_short.py face_raw.mp4 claude-edits";
-  const steps: [string, string][] = [["● transcribe raw", "#5BD68A"], ["● pick last takes + cut", "#5BD68A"], ["● full render", "#5BD68A"], ["● Desktop/Shorts - final/claude-edits.mp4", "#FFD479"]];
+  const c = cues(WS, "cloud code edited");
   return (
-    <Card dark top={HOOK_TOP} h={HOOK_H} d={d} title="Claude Code · ~/shorts-studio">
-      <div style={{display: "flex", alignItems: "center", gap: 14}}><Logo src="claude-icon.svg" size={40} /><Mono c="#8A8A8A" size={30}>Claude Code</Mono></div>
-      <Mono c="#fff" size={34}>{"> " + typed(cmd, d, 0, 160)}{d < 8 && <Cursor d={d} />}</Mono>
-      {steps.map(([t, c], i) => d > 7 + i * 2 && <Mono key={t} c={c} size={34}>{"  " + t}</Mono>)}
+    <Card top={HOOK_TOP} h={HOOK_H} d={d} url={URL + "/shorts-studio"}>
+      <Shot d={d} src={R} iw={RW} ih={RH} boxH={316}
+        keys={[{at: 0, cx: 640, cy: 2880, w: 1100}, {at: c("i filmed"), cx: 640, cy: 2900, w: 1100}]}
+        marks={[hl({x: 92, y: 2925, w: 492, h: 50}, c("edited"), c("edited") + 10), bx({x: 84, y: 2780, w: 414, h: 104}, c("short")),
+          hl({x: 667, y: 2925, w: 453, h: 50}, c("phone"), c("all") + 4)]} />
     </Card>
   );
 };
 
-// 2. "I filmed it on my phone in one take, retakes and all." Line 5 of Short 01 had 4 attempts, the last one was kept
-const S2Phone: React.FC<{d: number}> = ({d}) => {
-  const k = pop(d, 2);
-  const chip = (i: number) => {
-    const kept = i === 3;
-    const on = pop(d, 8 + i * 8);
-    const struck = !kept && d > 14 + i * 8;
-    return (
-      <div key={i} style={{padding: "10px 20px", borderRadius: 14, fontFamily: SANS, fontWeight: 800, fontSize: 40, opacity: on, transform: `scale(${0.85 + 0.15 * on})`,
-        border: `3px solid ${kept ? BLUE : struck ? BAD : "#C9CFD6"}`, background: kept ? BLUE : "#F4F6F9", color: kept ? "#fff" : struck ? "#A0A6AD" : INK,
-        textDecoration: struck ? `line-through ${BAD} 5px` : "none"}}>
-        {kept ? "try 4 · kept" : `try ${i + 1}`}
-      </div>
-    );
-  };
+// 2 FULL "Whisper writes down every word I say, with timestamps. Then a script keeps my last try at each line.": README steps 1-2, one crop panned
+const S2Readme: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "whisper writes");
+  const ev = c("every"), th = c("then");
   return (
-    <Card top={HOOK_TOP} h={HOOK_H} d={d} title="face_raw.mp4">
-      <div style={{fontFamily: SANS, color: INK}}>
-        <div style={{display: "flex", alignItems: "center", gap: 26, opacity: k, transform: `scale(${0.9 + 0.1 * k})`, transformOrigin: "left center"}}>
-          <Logo src="phone_flat.svg" size={130} />
-          <div>
-            <div style={{fontSize: 84, fontWeight: 800, letterSpacing: -2, lineHeight: 1}}>1 phone <span style={{fontFamily: SERIF, fontStyle: "italic", color: BLUE}}>take</span></div>
-            <div style={{fontSize: 38, fontWeight: 600, color: "#59636E", marginTop: 10}}>retakes and all</div>
-          </div>
-        </div>
-        <div style={{marginTop: 34, display: "flex", gap: 14}}>{[0, 1, 2, 3].map(chip)}</div>
-      </div>
+    <Card top={TOP} h={H} d={d} url={URL + "/shorts-studio"}>
+      <Shot d={d} src={R} iw={RW} ih={RH}
+        // w 760 in FULL (glyphs ~30 px on the frame): w 1100 showed the whole README at ~22 px, unreadable on a phone (frame pass 1)
+        keys={[{at: 0, cx: 468, cy: 3380, w: 760}, {at: ev - 12, cx: 468, cy: 3380, w: 760}, {at: ev + 6, cx: 1000, cy: 3450, w: 760},
+          // panned right the header row is out of view, so cy 3450 (final v1: a ~300 px blank band at the card top at 8-11 s)
+          {at: th - 2, cx: 1000, cy: 3450, w: 760}, {at: th + 10, cx: 600, cy: 3420, w: 760}]}
+        marks={[bx({x: 311, y: 3172, w: 144, h: 62}, 2), hl({x: 673, y: 3178, w: 667, h: 50}, c("writes"), c("sense") + 6),
+          hl({x: 481, y: 3234, w: 419, h: 50}, c("keeps"), c("line") + 4)]} />
     </Card>
   );
 };
 
-// 3. "Whisper writes down every word I say, with timestamps." The real first rows of this Short's words.json
-const S3Words: React.FC<{d: number}> = ({d}) => {
-  const rows = WORDS.slice(0, 5).map((x) => [(({cloud: "Claude", clod: "Claude", claud: "Claude"} as Record<string, string>)[x.w.toLowerCase().replace(/[.,!?]$/, "")] ?? x.w.replace(/[.,!?]$/, "")), x.s.toFixed(2), x.e.toFixed(2)]);
-  const shown = Math.floor(interpolate(d, [2, 20], [0, rows.length], clamp));
-  const tag = (t: string, at: number) => <div style={{fontFamily: SANS, fontWeight: 800, fontSize: 38, color: "#fff", background: BAD, padding: "8px 18px", borderRadius: 10, opacity: pop(d, at), transform: `scale(${0.85 + 0.15 * pop(d, at)})`}}>{t}</div>;
+// 3 FULL "Every scene you see is React code, built in Remotion and timed to my words.": remotion.dev, React on the word, the logo on
+// "Remotion", then down to the editor's timeline (captions track) on "timed to my words"
+const S3Remotion: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "every scene");
+  const tm = c("timed");
   return (
-    <Card dark top={TOP} h={H} d={d} fill={1.14} title="transcribe.py">
-      <Mono c="#8A8A8A" size={30}>faster-whisper · word_timestamps=True</Mono>
-      <div style={{fontFamily: SANS, fontWeight: 800, fontSize: 64, color: "#fff", letterSpacing: -1, marginTop: 4}}>words.json</div>
-      <div style={{marginTop: 14, padding: "10px 16px", borderRadius: 12, background: "#111", border: "1px solid #2A2A2A"}}>
-        {rows.slice(0, shown).map(([w, a, b], i) => (
-          <div key={i} style={{fontFamily: MONO, fontSize: 36, lineHeight: 1.5, color: "#E6E6E6", whiteSpace: "pre"}}>
-            {`{"w": `}<span style={{color: "#FFD479"}}>{`"${w}"`}</span>{", "}
-            <span style={{outline: i === 0 && d > 26 ? `3px solid ${BAD}` : "none", borderRadius: 4}}>{`"s": `}<span style={{color: "#7AB8FF"}}>{a}</span></span>
-            {", "}
-            <span style={{outline: i === 0 && d > 40 ? `3px solid ${BAD}` : "none", borderRadius: 4}}>{`"e": `}<span style={{color: "#7AB8FF"}}>{b}</span></span>{"}"}
-          </div>
-        ))}
-      </div>
-      <div style={{display: "flex", gap: 14, marginTop: 16}}>{tag("s = start time", 26)}{tag("e = end time", 40)}</div>
+    <Card top={TOP} h={H} d={d} url="remotion.dev">
+      <Shot d={d} src="claude-edits/remotion_home.png" iw={1800} ih={2200}
+        keys={[{at: 0, cx: 600, cy: 560, w: 1100}, {at: tm - 14, cx: 600, cy: 560, w: 1100}, {at: tm + 4, cx: 960, cy: 1240, w: 1300}]}
+        marks={[hl({x: 650, y: 321, w: 112, h: 56}, c("react"), c("code") + 4), bx({x: 96, y: 22, w: 300, h: 76}, c("remotion")),
+          bx({x: 330, y: 1334, w: 1390, h: 48}, tm + 2)]} />
     </Card>
   );
 };
 
-// 4. "Then a script keeps my last try at each line." cut_takes.py prints "line N: K attempt(s), using the last"
-const S4Cut: React.FC<{d: number}> = ({d}) => {
-  const out: [string, string, number][] = [["line 10: 2 attempt(s),", "#E6E6E6", 12], ["  using the last", "#5BD68A", 16], ["line 12: 3 attempt(s),", "#E6E6E6", 22], ["  using the last", "#5BD68A", 26]];
+// 4 "Even these captions light up as I say them.": a frame of our real Short 04, its karaoke caption mid-word ("whenever" lighting up)
+const S4Captions: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "even discussions");
+  const l = c("light");
   return (
-    <Card dark top={TOP} h={H} d={d} fill={1.2} title="Terminal · ~/shorts-studio">
-      <div style={{display: "flex", alignItems: "center", gap: 14}}><Logo src="python.svg" size={48} /><Mono c="#8A8A8A" size={32}>cut_takes.py</Mono></div>
-      <Mono c="#fff" size={56}>{"> " + typed("py cut_takes.py", d, 0, 50)}{d < 10 && <Cursor d={d} />}</Mono>
-      {out.map(([t, c, at], i) => d > at && <Mono key={i} c={c} size={44}>{t}</Mono>)}
-      <Pill ok text="last try of each line kept" d={d} at={34} />
+    <Card top={TOP} h={H} d={d} title="Short 04 · captions">
+      <Shot d={d} src="claude-edits/short04_frame.png" iw={1080} ih={1920}
+        keys={[{at: 0, cx: 540, cy: 760, w: 1080}, {at: l - 6, cx: 540, cy: 760, w: 1080}, {at: l + 10, cx: 530, cy: 1060, w: 820}]}
+        marks={[bx({x: 210, y: 912, w: 640, h: 116}, l)]} />
     </Card>
   );
 };
 
-// 5. "It cuts every pause longer than a quarter second, and speeds me up ten percent." SPEED = 1.1, pauses > 0.25 s
-const S5Pauses: React.FC<{d: number}> = ({d}) => {
-  const gap = interpolate(d, [6, 20], [52, 0], clamp);
-  const chunks = [0, 1, 2, 3];
-  const badge = (big: string, sub: string, at: number) => {
-    const k = pop(d, at);
-    return (
-      <div style={{flex: 1, borderRadius: 22, background: "#E7F1FF", border: "2px solid #C7DDFB", padding: "26px 10px", textAlign: "center", opacity: k, transform: `scale(${0.85 + 0.15 * k})`, filter: `blur(${(1 - k) * 8}px)`}}>
-        <div style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 118, color: BLUE, lineHeight: 1.05}}>{big}</div>
-        <div style={{fontFamily: SANS, fontWeight: 700, fontSize: 40, color: "#3B434C", marginTop: 6}}>{sub}</div>
-      </div>
-    );
-  };
+// 5 FULL "Before I see anything, a separate AI agent reviews one frame per second.": the checker's real contact sheet (Short 07),
+// one frame boxed on "one frame", the next on "second"
+const S5Checker: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "before i");
+  const o = c("one");
   return (
-    <Card top={TOP} h={H} d={d} title="cut_takes.py">
-      <div style={{fontFamily: SANS, color: INK}}>
-        <div style={{fontSize: 30, color: "#59636E", fontWeight: 500}}>My voice, before and after</div>
-        <div style={{fontSize: 62, fontWeight: 800, letterSpacing: -1.5}}>Pauses <span style={{fontFamily: SERIF, fontStyle: "italic", color: BAD}}>gone</span></div>
-        <div style={{marginTop: 20, height: 200, display: "flex", alignItems: "center", justifyContent: "center", background: "#F4F6F9", borderRadius: 18, border: "1px solid #E1E5EA"}}>
-          {chunks.map((c) => (
-            <React.Fragment key={c}>
-              <div style={{display: "flex", alignItems: "center", gap: 5}}>
-                {Array.from({length: 11}).map((_, i) => (
-                  <div key={i} style={{width: 12, borderRadius: 6, background: BLUE, height: 30 + Math.abs(Math.sin((c * 11 + i) * 1.7)) * 100}} />
-                ))}
-              </div>
-              {c < 3 && <div style={{width: gap, height: 110, margin: `0 ${gap > 1 ? 6 : 2}px`, borderRadius: 8, background: `repeating-linear-gradient(90deg, #D5DAE0 0 6px, transparent 6px 12px)`, opacity: gap / 52}} />}
-            </React.Fragment>
-          ))}
-        </div>
-        <div style={{marginTop: 26, display: "flex", gap: 24}}>
-          {badge("0.25 s", "longer pauses: cut", 12)}
-          {badge("1.1x", "speed", 70)}
+    <Card top={TOP} h={H} d={d} title="checker · 1 frame per second">
+      <Shot d={d} src="claude-edits/checker_sheet.png" iw={1728} ih={2688}
+        keys={[{at: 0, cx: 864, cy: 1000, w: 1728}, {at: o - 14, cx: 864, cy: 1000, w: 1728}, {at: o + 2, cx: 760, cy: 960, w: 760}]}
+        marks={[bx({x: 432, y: 768, w: 216, h: 384}, o), bx({x: 648, y: 768, w: 216, h: 384}, c("second"))]} />
+    </Card>
+  );
+};
+
+// 6 "It levels the sound, and the video lands on my desktop.": README step 6, panned to the second half on "the video"
+const S6Finish: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "it levels");
+  const v = c("video");
+  return (
+    <Card top={TOP} h={H} d={d} url={URL + "/shorts-studio"}>
+      <Shot d={d} src={R} iw={RW} ih={RH}
+        keys={[{at: 0, cx: 495, cy: 3420, w: 820}, {at: v - 12, cx: 495, cy: 3420, w: 820}, {at: v + 4, cx: 1240, cy: 3420, w: 820}]}
+        marks={[hl({x: 283, y: 3602, w: 240, h: 50}, c("levels"), c("sound") + 6), hl({x: 1110, y: 3602, w: 447, h: 50}, v - 4, c("desktop") + 6)]} />
+    </Card>
+  );
+};
+
+// 7 "I just talk. Claude handles the rest.": two chips, each on its words
+const S7Talk: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "i just");
+  return (
+    <Card top={TOP} h={H} d={d} title="Who does what">
+      <div style={{display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 46, height: 610, whiteSpace: "nowrap"}}>
+        <Chip d={d} at={c("talk") - 4} text="I just talk" size={104} />
+        <div style={{display: "flex", alignItems: "center", gap: 22, opacity: pop(d, c("claude") - 2)}}>
+          <Logo src="claude-icon.svg" size={96} />
+          <Chip d={d} at={c("claude") - 2} text="Claude handles the rest" size={68} />
         </div>
       </div>
     </Card>
   );
 };
 
-// 6. "Every scene you see is React code, built in Remotion and timed to my words." This very file's anchors
-const S6Code: React.FC<{d: number}> = ({d}) => {
-  const code = `anchors: [
-  ["claude code edited", S1Hook],
-  ["i filmed", S2Phone],
-  ["whisper writes", S3Words],
-  ["then a script", S4Cut],
-  ["it cuts", S5Pauses],`;
-  const t = typed(code, d, 0, 140);
-  const lines = t.split("\n");
-  const mark = d > 34;
-  const A = '"claude code edited"';
+// 8 "And the whole pipeline is free. Link's in the description.": Free on its word, then the link line (our repo folder)
+const S8End: React.FC<{d: number}> = ({d}) => {
+  const c = cues(WS, "and the whole");
+  const l = c("links");
   return (
-    <Card dark top={TOP} h={H} d={d} fill={1.22} title="src/shorts/claude-edits/index.tsx">
-      <div style={{display: "flex", alignItems: "center", gap: 16, marginBottom: 6}}>
-        <Logo src="react.svg" size={50} />
-        <div style={{fontFamily: SANS, fontWeight: 800, fontSize: 40, color: "#fff"}}>React <span style={{color: "#8A8A8A"}}>+</span> Remotion</div>
-      </div>
-      {lines.map((l, i) => (
-        <div key={i} style={{fontFamily: MONO, fontSize: 36, lineHeight: 1.45, color: "#E6E6E6", whiteSpace: "pre"}}>
-          {i === 1 && l.includes(A) ? (
-            <>{"  ["}<span style={{color: "#FFD479", outline: mark ? `3px solid ${BAD}` : "none", borderRadius: 4}}>{A}</span>{l.slice(l.indexOf(A) + A.length)}</>
-          ) : l}
-          {i === lines.length - 1 && d < 34 && <Cursor d={d} />}
-        </div>
-      ))}
-      {mark && <div style={{marginTop: 10, fontFamily: SANS, fontWeight: 800, fontSize: 36, color: "#fff", background: BAD, display: "inline-block", padding: "6px 16px", borderRadius: 8, opacity: pop(d, 34)}}>↑ scene starts on this word</div>}
-    </Card>
-  );
-};
-
-// 7. "Even these captions light up as I say them." Same rule as the real captions: grey until said, then ink, keyword blue
-const S7Captions: React.FC<{d: number}> = ({d}) => {
-  const demo = ["Even", "these", "captions", "light", "up"];
-  const cap = WORDS.find((x) => /^(captions|discussions)/.test(x.w.toLowerCase()));
-  const chip = (dot: string, label: string, at: number) => (
-    <div style={{display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", borderRadius: 14, border: "2px solid #E1E5EA", background: "#F4F6F9", opacity: pop(d, at), fontSize: 34, fontWeight: 700, color: "#3B434C"}}>
-      <div style={{width: 26, height: 26, borderRadius: 13, background: dot}} />{label}
-    </div>
-  );
-  return (
-    <Card top={TOP} h={H} d={d} fill={1.08} title="kit.tsx · Captions">
-      <div style={{fontFamily: SANS, color: INK}}>
-        <div style={{fontSize: 34, color: "#59636E", fontWeight: 600}}>Karaoke captions, from my real word times</div>
-        <div style={{marginTop: 14, fontSize: 104, fontWeight: 800, letterSpacing: -2, lineHeight: 1.1, display: "flex", flexWrap: "wrap", columnGap: 26}}>
-          {demo.map((w, i) => {
-            const said = d > 4 + i * 6;
-            const key = w === "captions";
-            return <span key={w} style={{color: !said ? GREY : key ? BLUE : INK, fontFamily: key ? SERIF : SANS, fontStyle: key ? "italic" : "normal"}}>{w}</span>;
-          })}
-        </div>
-        <div style={{marginTop: 26, display: "flex", gap: 12, flexWrap: "wrap"}}>
-          {chip(GREY, "not said yet", 2)}{chip(INK, "said", 6)}{chip(BLUE, "keyword", 10)}
-        </div>
-        {cap && <div style={{marginTop: 26, opacity: pop(d, 12)}}><Mono c="#3B434C" size={36}>{`"captions" lights up at ${cap.s.toFixed(2)} s`}</Mono></div>}
+    <Card top={TOP} h={H} d={d} url={REPO}>
+      <div style={{display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 44, height: 610, whiteSpace: "nowrap"}}>
+        {/* the pipeline's folder shows on "the whole pipeline" (frame pass 1: the card sat blank ~1 s until "free") */}
+        <div style={{display: "flex", alignItems: "center", gap: 14, fontFamily: SANS, fontWeight: 600, fontSize: 36, color: "#59636E", opacity: pop(d, c("pipeline") - 4)}}>
+          <Logo src="github-icon.svg" size={46} />FindingLand/youtube-skills/shorts-studio</div>
+        <Chip d={d} at={c("free") - 2} text="Free" size={130} />
+        <div style={{fontFamily: SANS, fontWeight: 800, fontSize: 64, color: INK, letterSpacing: -1, display: "flex", alignItems: "center", gap: 16,
+          opacity: pop(d, l), transform: `scale(${0.88 + 0.12 * pop(d, l)})`}}>
+          <Icon src="pin_flat.svg" color={BLUE} size={70} />Link in the description</div>
       </div>
     </Card>
   );
 };
-
-// 8. "Before I see anything, a separate AI agent reviews one frame per second." frames.mjs renders s_001.png, s_002.png...
-const S8Frames: React.FC<{d: number}> = ({d}) => {
-  const scan = d < 4 ? 0 : (((d - 4) % 44) / 44) * 100;
-  const tile = (i: number) => {
-    const k = pop(d, i * 2);
-    return (
-      <div key={i} style={{position: "relative", width: 136, height: 242, borderRadius: 12, overflow: "hidden", border: "2px solid #D1D9E0",
-        background: "linear-gradient(160deg,#F3F4F1,#DFECF2)", opacity: k, transform: `scale(${0.85 + 0.15 * k})`}}>
-        <div style={{position: "absolute", left: 10, right: 10, top: 16, height: 80, borderRadius: 6, background: i % 3 === 1 ? "#1A1A1A" : "#fff", border: `2px solid ${BLUE}`}} />
-        <div style={{position: "absolute", left: 24, right: 24, top: 108, height: 10, borderRadius: 5, background: INK}} />
-        <div style={{position: "absolute", left: 8, right: 8, top: 132, bottom: -10, borderRadius: 14, background: "#B9C2C9"}} />
-        <div style={{position: "absolute", left: 46, top: 150, width: 44, height: 44, borderRadius: 22, background: "#8C969F"}} />
-        <div style={{position: "absolute", left: 0, right: 0, bottom: 6, textAlign: "center", fontFamily: MONO, fontSize: 20, color: "#fff", fontWeight: 700}}>{`s_${String(i + 1).padStart(3, "0")}`}</div>
-      </div>
-    );
-  };
-  const stamp = (row: number, at: number) => {
-    const k = pop(d, at);
-    return <div style={{position: "absolute", right: 10, top: row * 256 + 80, padding: "6px 20px", border: `5px solid ${OK}`, borderRadius: 12, background: "#EAF7EEee",
-      color: OK, fontFamily: SANS, fontWeight: 900, fontSize: 54, letterSpacing: 2, opacity: k, transform: `rotate(-8deg) scale(${1.4 - 0.4 * k})`}}>PASS</div>;
-  };
-  return (
-    <Card top={TOP} h={H} d={d} title="frames.mjs · check_frames.py">
-      <div style={{fontFamily: SANS, color: INK}}>
-        <div style={{display: "flex", alignItems: "center", gap: 16}}>
-          <Logo src="robot_flat.svg" size={64} />
-          <div style={{fontSize: 52, fontWeight: 800, letterSpacing: -1}}>1 frame <span style={{fontFamily: SERIF, fontStyle: "italic", color: BLUE}}>per second</span></div>
-        </div>
-        <div style={{position: "relative", marginTop: 18}}>
-          <div style={{display: "flex", flexWrap: "wrap", gap: 14}}>{Array.from({length: 12}).map((_, i) => tile(i))}</div>
-          <div style={{position: "absolute", left: -10, right: -10, top: `${scan}%`, height: 6, background: BLUE, boxShadow: `0 0 18px ${BLUE}`, opacity: scan < 100 ? 1 : 0}} />
-          {stamp(0, 26)}{stamp(1, 46)}
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-// 9. "It levels the sound, and the video lands on my desktop." finalize.py loudnorm I=-14; make_short.py copies to Desktop
-const S9Audio: React.FC<{d: number}> = ({d}) => {
-  const lvl = -14 + Math.sin(d / 3) * 9 * Math.max(0, 1 - d / 36);
-  const pct = interpolate(lvl, [-30, 0], [0, 100], clamp);
-  const slide = interpolate(d, [52, 70], [-420, 0], clamp);
-  const landed = d > 70;
-  return (
-    <Card top={TOP} h={H} d={d} fill={1.16} title="finalize.py · make_short.py">
-      <div style={{fontFamily: SANS, color: INK}}>
-        <div style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 130, color: BLUE, lineHeight: 1}}>-14 LUFS</div>
-        <div style={{fontSize: 36, fontWeight: 600, color: "#59636E", marginTop: 6}}>the sound, levelled: two-pass loudnorm</div>
-        <div style={{position: "relative", marginTop: 22, height: 56, borderRadius: 28, background: "#E9EDF1", overflow: "hidden"}}>
-          <div style={{position: "absolute", left: 0, top: 0, bottom: 0, width: `${pct}%`, background: "linear-gradient(90deg,#2EA043,#A4AF2A,#FFA412)"}} />
-          <div style={{position: "absolute", left: `${(16 / 30) * 100}%`, top: -4, bottom: -4, width: 5, background: INK}} />
-        </div>
-        <div style={{marginTop: 40, display: "flex", alignItems: "center", gap: 20, height: 190, padding: "0 20px", borderRadius: 22, background: "#E7F1FF", border: "2px solid #C7DDFB", overflow: "hidden"}}>
-          <div style={{transform: `translateX(${slide}px)`, display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", borderRadius: 16, background: "#fff", boxShadow: "0 6px 20px rgba(0,0,0,.12)", opacity: d > 50 ? 1 : 0}}>
-            <Icon src="film_flat.svg" color={BLUE} size={64} />
-            <div style={{fontFamily: MONO, fontSize: 34, color: INK, fontWeight: 700}}>claude-edits.mp4</div>
-          </div>
-          <div style={{marginLeft: "auto", textAlign: "center"}}>
-            <Icon src="desktop_flat.svg" color={landed ? OK : "#6B7480"} size={92} />
-            <div style={{fontSize: 30, fontWeight: 700, color: landed ? OK : "#3B434C"}}>{landed ? "✓ Desktop" : "Desktop"}</div>
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-// 10. "My last one took eleven minutes of machine time." timings.csv, run egm_final: TOTAL machine 684 s
-const S10Time: React.FC<{d: number}> = ({d}) => {
-  const n = Math.round(interpolate(d, [0, 20], [0, 684], clamp));
-  const rows: [string, string][] = [["transcribe raw", "36 s"], ["pick last takes + cut", "74 s"], ["check frames", "263 s"], ["full render", "268 s"]];
-  return (
-    <Card top={TOP} h={H} d={d} fill={1.1} title="timings.csv · my last Short">
-      <div style={{fontFamily: SANS, color: INK}}>
-        <div style={{display: "flex", alignItems: "baseline", gap: 26}}>
-          <div style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 160, color: BLUE, lineHeight: 1, paddingLeft: 12}}>{n} s</div>
-          <div style={{fontSize: 56, fontWeight: 800, letterSpacing: -1, opacity: pop(d, 18)}}>= 11 min</div>
-        </div>
-        <div style={{fontSize: 34, fontWeight: 600, color: "#59636E", marginTop: 8}}>total machine time, biggest steps:</div>
-        <div style={{marginTop: 14}}>
-          {rows.map(([a, b], i) => (
-            <div key={a} style={{display: "flex", justifyContent: "space-between", padding: "12px 24px", marginBottom: 6, borderRadius: 12, fontSize: 42, fontWeight: 700, background: "#F4F6F9", border: "2px solid #E1E5EA", opacity: pop(d, 4 + i * 3)}}>
-              <span>{a}</span><span style={{fontFamily: MONO, color: BLUE}}>{b}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-// 11. "I just talk. Claude handles the rest."
-const S11Split: React.FC<{d: number}> = ({d}) => {
-  const a = pop(d, 2), b = pop(d, 10);
-  const grow = interpolate(d, [10, 34], [1, 1.5], clamp);
-  const jobs = ["transcript", "cuts", "scenes", "captions", "frame check", "sound"];
-  return (
-    <Card top={TOP} h={H} d={d} fill={1.12} title="Who does what">
-      <div style={{fontFamily: SANS}}>
-        <div style={{display: "flex", gap: 24}}>
-          <div style={{flex: 1, borderRadius: 22, background: "#F4F6F9", border: "2px solid #E1E5EA", padding: "34px 10px", textAlign: "center", opacity: a, transform: `scale(${0.9 + 0.1 * a})`}}>
-            <Icon src="mic_flat.svg" color={INK} size={150} />
-            <div style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 70, color: INK, marginTop: 8}}>Me</div>
-            <div style={{fontWeight: 700, fontSize: 40, color: "#3B434C"}}>I talk</div>
-          </div>
-          <div style={{flex: grow, borderRadius: 22, background: "#FFF1E4", border: "2px solid #FBD9B8", padding: "34px 10px", textAlign: "center", opacity: b, transform: `scale(${0.9 + 0.1 * b})`}}>
-            <Logo src="claude-icon.svg" size={150} />
-            <div style={{fontFamily: SERIF, fontStyle: "italic", fontWeight: 800, fontSize: 70, color: CLAUDE, marginTop: 8}}>Claude</div>
-            <div style={{fontWeight: 700, fontSize: 40, color: "#3B434C"}}>everything else</div>
-          </div>
-        </div>
-        <div style={{marginTop: 26, display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center"}}>
-          {jobs.map((j, i) => <span key={j} style={{padding: "8px 20px", borderRadius: 12, border: `2px solid ${CLAUDE}`, color: CLAUDE, fontWeight: 800, fontSize: 36, opacity: pop(d, 12 + i * 3)}}>✓ {j}</span>)}
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-// 12. "And the whole pipeline is free. Link's in the description."
-const S12End: React.FC<{d: number}> = ({d}) => <EndCard d={d} folder="shorts-studio" />;
 
 export const claudeedits = makeShort({
   slug: "claude-edits",
-  words: WORDS,
-  fix: {cloud: "Claude", clod: "Claude", claud: "Claude", emotion: "Remotion", promotion: "Remotion", links: "Link's", discussions: "these captions", post: "pause", react: "React"},
-  key: ["free", "retakes", "timestamps", "last", "pause", "scene", "captions", "agent", "eleven"],
-  noun: ["claude", "whisper", "remotion", "react"],
+  words: WS,
+  // from the CUT transcript (shorts-guide 3e): Whisper heard "Cloud", "time sense", "discussions", "Links"
+  fix: {cloud: "Claude", "time sense": "timestamps", discussions: "these captions", short: "Short", react: "React", remotion: "Remotion", links: "Link's"},
+  key: ["edited", "retakes", "timestamps", "last", "react", "these captions", "agent", "second", "sound", "desktop", "talk", "free"],
+  noun: ["claude", "code", "short", "whisper", "remotion"],
   anchors: [
-    ["claude code edited", S1Hook], ["i filmed", S2Phone], ["whisper writes", S3Words], ["then a script", S4Cut], ["it cuts", S5Pauses],
-    ["every scene", S6Code], ["light up", S7Captions], ["before i", S8Frames], ["it levels", S9Audio], ["my last", S10Time],
-    ["i just", S11Split], ["and the whole", S12End],
+    ["claude code edited", S1Hook], ["whisper writes", S2Readme], ["every scene", S3Remotion], ["even", S4Captions], ["before i", S5Checker],
+    ["it levels", S6Finish], ["i just", S7Talk], ["and the whole", S8End],
   ],
-  hookEnd: 2,
-  hook: {brand: "Claude Code", rest: "Edited", box: "This Entire Short", brandColor: "#D97757"},
-  faceSrcTop: 820,
+  // FULL (no face): the hard part Whisper -> takes -> React/Remotion (covers the slight look-aways at 12.4, 14.4-15.2, 17.6-18.0 and
+  // 21.4-21.6 s on the 5 fps sheets), and the checker line through "on my desktop" (covers the hand at the face at 25.2-25.4 s, 28.8 s,
+  // and the head turn + eyes down at 33.2-34.2 s the checker flagged). Face on screen ~37%.
+  full: [["whisper writes", 14.9], ["before i", 11.3]],
+  hookEnd: 1,
+  hook: {brand: "Claude Code", rest: "Edited", box: "This Entire Short", brandColor: "#D97757", boxSize: 92},
+  faceSrcTop: 810,   // hair top at source y ~870 (frames at 5 s and 30 s)
+  faceFit: "zoom",   // close take: chin at source y ~1640 (shorts-guide 3h)
 });
