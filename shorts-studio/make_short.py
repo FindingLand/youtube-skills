@@ -51,10 +51,20 @@ pub = ROOT / "public" / slug; pub.mkdir(parents=True, exist_ok=True)
 shutil.copy(work / "face_cut.mp4", pub / "face.mp4"); shutil.copy(work / "words_cut.json", scenes.parent / "words.json")
 # side fill of the face card: a blurred still of the wall above his head (a still, not a 2nd video: that doubled render time)
 run("wall still", [FF, "-v", "error", "-y", "-ss", "1", "-i", str(pub / "face.mp4"), "-frames:v", "1", "-vf", "crop=1080:520:0:0,scale=1080:1920,boxblur=30:3", "-q:v", "3", str(pub / "wall.jpg")])
+# --cut-only (Nov 18 2026, Short 07): stop after the cut + cut_report + the 5 fps look-away sheets. The first --check-only pass of
+# 07 also rendered 351 s of check frames of the PLACEHOLDER draft scenes (useless: the scenes are rebuilt on the cut words), and
+# its stale contact sheet was later read by mistake as the new one. Use --cut-only first, build scenes, then --skip-cut --check-only.
+if "--cut-only" in sys.argv:
+    run("look-away sheets", ["py", str(ROOT / "lookaway.py"), slug])
+    print("CUT-ONLY: read the cut_report CHECK rows + D:/Shorts/<slug>/look/sheet_*.png, build scenes, then --skip-cut --check-only")
+    [print(f"  {l:<22}{s:>5}s") for l, s in log]; sys.exit(0)
 # --no-frames (Nov 18 2026, Short 05): the final pass after the frames were checked; re-rendering all check frames cost ~6 min.
 # Fixes inside the loop are spot-checked with `node frames.mjs <slug> out/<dir> 26,29` (a few frames, ~1 min).
 if "--no-frames" not in sys.argv:
     frames = ROOT / "out" / f"frames_{slug}"; shutil.rmtree(frames, ignore_errors=True); frames.mkdir(parents=True)
+    # Nov 18 2026 (07): a wait loop matched the "check frames" line and read the PREVIOUS run's sheet (rewritten ~12 s later).
+    # The old sheet is deleted first; wait for the "contact sheet:" line, never the stage line
+    (ROOT / "out" / f"sheet_{slug}.png").unlink(missing_ok=True)
     run("check frames", f"node frames.mjs {slug} out/frames_{slug}")
     run("empty-space check", ["py", "check_frames.py", "--frames-only", str(frames)])
     # contact sheet: every check frame on one image, read it first (whole-Short view in one look)
